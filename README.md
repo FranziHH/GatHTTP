@@ -4,7 +4,7 @@
 sudo pip install --break-system-packages virtualenv
 
 ### Setup Virtual Env Windows:
-sudo pip install --break-system-packages virtualenv
+sudo pip install virtualenv
 
 git clone https://github.com/FranziHH/GatHTTP
 
