@@ -6,13 +6,11 @@ sudo pip install --break-system-packages virtualenv
 ### Setup Virtual Env Windows:
 sudo pip install virtualenv
 
+### Clone Repository
 git clone https://github.com/FranziHH/GatHTTP
 
-change Directory
-
-cd GatHTTP
-
 ## After clone or pull from Github 
+GoTo GatHTTP Directory
 
 ### Execute Linux:
 virtualenv .env && source .env/bin/activate && pip install -r requirements.txt
