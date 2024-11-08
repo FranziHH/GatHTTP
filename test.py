@@ -32,5 +32,5 @@ dom = xml.dom.minidom.parseString(r.text)
 # element = dom.getElementsByTagName('displayText')[0]
 print('access:', getXmlValue('access'))
 print('direction:', getXmlValue('direction'))
-print('displayText:', getXmlValue('displayText'))
+print('displayText:', getXmlValue('displayText').replace("%n", "\n"))
 # print('ticketId:', getXmlValue('ticketId'))
