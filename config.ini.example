@@ -1,0 +1,28 @@
+[request]
+url = 
+username = 
+password = 
+# Seconds
+timeout = 3
+
+[JSON]
+url = 
+username = 
+password =
+# Seconds
+timeout = 3
+data = {"direction": "0", "gate": "1", "barcode": "$BARCODE", "rfid": "$RFID"}
+
+[GatOpen]
+# Seconds
+TimeOpen = 5
+
+[Reader]
+baud_rate = 9600
+com_port = /dev/ttyACM1
+bc_prefix = CODE:
+timeout = 0.2
+# 0/1
+rfid_switch_pairs = 0
+# 0/1
+rfid_convert_to_dec = 1

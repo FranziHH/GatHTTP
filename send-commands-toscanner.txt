@@ -1,0 +1,17 @@
+bezüglich der Möglichkeit spezielle Commandos direkt an den Scanner zu senden habe ich aus Holland folgende Rückmeldung erhalten und das funktioniert auch via RS232.
+Yes, you can send host commands to the FM3281. The scanner needs to be connected in USB-CDC to the host. The host can send commands to the scanner via the virtual serial port.
+Example to beep : send the below characters (note \x7E means hex value 7E = decimal 126 , \x01 means 01 hex)
+\x7E\x010000#BEEPON2000F800T20V;\x03
+The syntax of the BEEPON command is :
+Lets the device ring once at the frequency and duration received.
+Parameter:
+F, frequency, unit is Hz, value range is 1 ~ 20000Hz. e.g. 2700F means the frequency of ringing is 2700Hz.
+T, Duration, in ms, the range is 1 ~ 10000ms, e.g. 100T means the duration of the sound is 100ms.
+V, volume, value range is 1 ~ 20. e.g. 20V means maximum volume.
+Transmit: BEEPON$ $ means Data, when Data is '*' or '&', answer: BEEPON<ACK>; when Data is '^', answer: BEEPON1-20000F1-10000T1-20V<ACK>; when Data is xxxFyyyyTnnV (xxx conforms to the range of F parameter, yyyy conforms to the range of T parameter). When Data is xxxFyyyyTnnV (xxx conforms to the range of F parameter, yyyy conforms to the range of T parameter, nn conforms to the range of V parameter), the answer is: <STX> <SOH> 0000#(or @) BEEPON$ <ACK> ($ is the received Data, i.e., xxxFyyyyTnnV); when Data is the rest of the characters, or when Data is empty, the answer is: BEEPON$<NAK>.
+Example: send ~<SOH>0000#BEEPON1600F50T20V;<ETX>
+Answer <STX><SOH>0000#BEEPON1600F50T20V<ACK>;<ETX>At the same time, send out the loudest sound with the frequency of 1600Hz and duration of 50ms.
+
+For the LED there are only Red and Green led host commands :
+\x7E\x010000#LEDONS2C2000D;\x03 --> Set the green LED (2C) for 2000 ms
+\x7E\x010000#LEDONS0C4000D;\x03 --> Set the red LED (2C) for 4000 ms
