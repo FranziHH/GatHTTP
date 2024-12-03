@@ -26,3 +26,4 @@ timeout = 0.2
 rfid_switch_pairs = 0
 # 0/1
 rfid_convert_to_dec = 1
+
