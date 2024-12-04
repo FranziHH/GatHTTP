@@ -189,5 +189,34 @@ def ReadVersion() -> str:
         return "-1"
 
 
+def SetBaudRate(baud: int) -> int:
+    # 0: 4800
+    # 1: 9600
+    # 2: 19200
+    # 3: 38400
+    # 4: 57600
+    # 5: 115200
+    # 6: 128000
+    # 7: 256000
+    s = GetRS485()
+
+    cmd = [0, 0, 0, 0, 0, 0, 0, 0]
+    cmd[0] = 0x00  # Device address
+    cmd[1] = 0x06  # command
+    cmd[2] = 0x20
+    cmd[3] = 0x00
+    cmd[4] = 0x00
+    cmd[5] = baud
+    crc = ModbusCRC(cmd[0:6])
+    cmd[6] = crc & 0xFF
+    cmd[7] = crc >> 8
+    s.write(cmd)
+    r = s.read(6)
+    if (bytes(cmd[0:6]) == r):
+        return 1
+    else:
+        return 0
+
+
 def ByteArr2Hex(array: bytearray) -> str:
     return ' ' . join(format(i, '02x').upper() for i in array)
