@@ -6,17 +6,19 @@
 from func_relais import *
 import time
 
-# RelaisOn(1, 4)
-# print(ByteArr2Hex(RelaisOn(1, 0)))
+print(RelaisOn(1, 7))
 
-# setStatus(1, '01010101')
-print(ByteArr2Hex(RelaisOff(1, 255)))
-time.sleep(0.5)
+# print(RelaisOff(1, 7))
 
+# print(SetStatus(1, '01010101'))
 
-print(getStatus(1, 255))
+# print(getStatus(1, 255))
 # print(hex(getStatus(1, 4)))
 
-# print(ByteArr2Hex(ReadAddr()))
+# print(ByteArr2Hex(WriteAddr([0x00, 0x02])))
+# print(WriteAddr([0x00, 0x01]))
 
+# print(ByteArr2Hex({0x00, 0x02}))
 # print(ReadVersion())
+
+# print(ReadAddr())
