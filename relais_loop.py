@@ -3,7 +3,7 @@
 # if you gets error like "usr/bin/env: ‘python\r’: No such file or directory"
 # convert file from dos into unix: "dos2unix [filename]"
 
-from func_relais import *
+from func_rs485 import *
 import time
 
 # All Off
