@@ -24,7 +24,7 @@ print('Config Vars:')
 print(url)
 
 data = {}
-data['GateNo'] = "TestDevice"
+data['GateNo'] = "TestDevice Mit ÄÖÜ"
 data['Barcode'] = "12345"
 data['Rfid'] = ""
 
@@ -53,7 +53,7 @@ if (r.status_code == 200):
         json = r.json()
         print('access.....:', str(json['access']))
         print('direction..:', str(json['direction']))
-        print('displayText:', str(json['displayText']))
+        print('displayText:', str(json['displayText']).replace("%n", " <br> "))
         # open gate
         subprocess.run(['python', 'GatOpen.py', str(json['access'])])
     except:
