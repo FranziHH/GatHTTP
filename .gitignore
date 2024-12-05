@@ -4,3 +4,4 @@ __pycache__/
 .python.txt
 config.ini
 getHost.py
+getHostJSON.py
