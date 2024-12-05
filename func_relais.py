@@ -40,7 +40,7 @@ def RelaisOn(address: int, number: int) -> int:
     if (bytes(cmd[0:6]) == r):
         return 1
     else:
-        return 0
+        return -1
 
 
 def RelaisOff(address: int, number: int) -> int:
@@ -61,10 +61,10 @@ def RelaisOff(address: int, number: int) -> int:
     if (bytes(cmd[0:6]) == r):
         return 1
     else:
-        return 0
+        return -1
 
 
-def GetStatus(address: int, number: int) -> int:
+def GetStatus(address: int, number: int) -> str:
     s = GetRS485()
 
     cmd = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -81,14 +81,14 @@ def GetStatus(address: int, number: int) -> int:
     r = s.read(6)
     if (len(r) == 6):
         if (number == 255):
-            return r[3]
+            return "{:0>8b}".format(r[3])
         else:
             if (r[3] & (1 << number)) != 0:
-                return 1
+                return "1"
             else:
-                return 0
+                return "0"
     else:
-        return -1
+        return "-1"
 
 
 def SetStatus(address: int, bit: str) -> int:
@@ -115,12 +115,13 @@ def SetStatus(address: int, bit: str) -> int:
         if (bytes(cmd[0:6]) == r):
             return 1
         else:
-            return 0
+            return -1
     else:
-        return -1
+        return -2
 
 
-def ReadAddr() -> bytes:
+def GetAddr() -> int:
+    # connect only ONE device
     s = GetRS485()
 
     cmd = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -136,43 +137,38 @@ def ReadAddr() -> bytes:
     s.write(cmd)
     r = s.read(5)
     if (len(r) == 5):
-        return bytes([r[3], r[4]])
+        return r[4]
     else:
-        return b'\x00'
+        return -1
 
 
-def WriteAddr(newAddr: bytes) -> bytes:
-    # Example: WriteAddr([0x00, 0x02])
-    s = GetRS485()
-
-    if (len(newAddr) == 2):
-        cmd = [0, 0, 0, 0, 0, 0, 0, 0]
-        cmd[0] = 0x00  # Device address
-        cmd[1] = 0x06  # command
-        cmd[2] = 0x40
-        cmd[3] = 0x00
-        cmd[4] = newAddr[0]
-        cmd[5] = newAddr[1]
-        crc = ModbusCRC(cmd[0:6])
-        cmd[6] = crc & 0xFF
-        cmd[7] = crc >> 8
-        s.write(cmd)
-        r = s.read(6)
-        if (len(r) == 6):
-            return bytes([r[4], r[5]])
-        else:
-            return b'\x00'
-
-    else:
-        # wrong Address
-        return b'\x99'
-
-
-def ReadVersion() -> str:
+def SetAddr(address: int) -> int:
+    # connect only ONE device
     s = GetRS485()
 
     cmd = [0, 0, 0, 0, 0, 0, 0, 0]
     cmd[0] = 0x00  # Device address
+    cmd[1] = 0x06  # command
+    cmd[2] = 0x40
+    cmd[3] = 0x00
+    cmd[4] = 0x00
+    cmd[5] = address
+    crc = ModbusCRC(cmd[0:6])
+    cmd[6] = crc & 0xFF
+    cmd[7] = crc >> 8
+    s.write(cmd)
+    r = s.read(6)
+    if (len(r) == 6):
+        return r[5]
+    else:
+        return -1
+
+
+def GetVersion(address: int) -> str:
+    s = GetRS485()
+
+    cmd = [0, 0, 0, 0, 0, 0, 0, 0]
+    cmd[0] = address  # Device address
     cmd[1] = 0x03  # command
     cmd[2] = 0x80
     cmd[3] = 0x00
@@ -189,7 +185,7 @@ def ReadVersion() -> str:
         return "-1"
 
 
-def SetBaudRate(baud: int) -> int:
+def SetBaudRate(address: int, baud: int) -> int:
     # 0: 4800
     # 1: 9600
     # 2: 19200
@@ -201,7 +197,7 @@ def SetBaudRate(baud: int) -> int:
     s = GetRS485()
 
     cmd = [0, 0, 0, 0, 0, 0, 0, 0]
-    cmd[0] = 0x00  # Device address
+    cmd[0] = address  # Device address
     cmd[1] = 0x06  # command
     cmd[2] = 0x20
     cmd[3] = 0x00
@@ -215,7 +211,7 @@ def SetBaudRate(baud: int) -> int:
     if (bytes(cmd[0:6]) == r):
         return 1
     else:
-        return 0
+        return -1
 
 
 def ByteArr2Hex(array: bytearray) -> str:

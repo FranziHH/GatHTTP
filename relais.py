@@ -6,23 +6,19 @@
 from func_relais import *
 import time
 
-print(RelaisOn(1, 7))
-
+# print(RelaisOn(1, 7))
 # print(RelaisOff(1, 255))
 
-# print(SetStatus(1, '01010101'))
+# print(SetStatus(1, '10101010'))
+# print(SetStatus(2, '01010101'))
 
-# print(getStatus(1, 255))
-# print(hex(getStatus(1, 4)))
+print(GetStatus(1, 255))
+print(GetStatus(2, 255))
 
-# print(ByteArr2Hex(WriteAddr([0x00, 0x02])))
-# print(WriteAddr([0x00, 0x01]))
+# print(SetAddr(2))
+# print(GetAddr())
 
-# print(ByteArr2Hex({0x00, 0x02}))
-# print(ReadVersion())
-
-# print(ReadAddr())
-
+# print(GetVersion(1))
 
 # 0: 4800
 # 1: 9600
@@ -33,4 +29,3 @@ print(RelaisOn(1, 7))
 # 6: 128000
 # 7: 256000
 # print(SetBaudRate(1))
-
