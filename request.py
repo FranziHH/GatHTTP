@@ -4,7 +4,6 @@ import sys
 # https://www.lambdatest.com/blog/python-configparser-tutorial/
 import configparser
 import requests
-import xml.dom.minidom
 from functions import *
 import subprocess
 
@@ -21,45 +20,47 @@ except Exception as err:
     print("config parameter missing")
     sys.exit(0)
 
-print ('Config Vars:')
+print('Config Vars:')
 print(url)
 
+data = {}
+data['GateNo'] = "TestDevice Mit ÄÖÜ"
+data['Barcode'] = "12345"
+data['Rfid'] = ""
+
 try:
-    r = requests.get(url, auth=(user, password), timeout=timeout)
+    # r = requests.post(url, auth=(user, password), data=data, timeout=timeout)
+    r = requests.post(url, auth=(user, password), json=data, timeout=timeout)
 except requests.exceptions.Timeout as err:
-    print ('timeout')
+    print('timeout')
     sys.exit(0)
 except requests.exceptions.HTTPError as err:
-    print ('HTTP Error')
+    print('HTTP Error')
     sys.exit(0)
 except requests.exceptions.ConnectionError as err:
-    print ('Connection Error')
+    print('Connection Error')
     sys.exit(0)
 except requests.exceptions.RequestException as err:
-    print ('RequestException Error')
+    print('RequestException Error')
     sys.exit(0)
 except Exception as err:
-    print ('Other Error')
+    print('Other Error')
     sys.exit(0)
 
-if r.status_code != 200:
-    print('Status Code:')
+
+if (r.status_code == 200):
+    try:
+        json = r.json()
+        print('access.....:', str(json['access']))
+        print('direction..:', str(json['direction']))
+        print('displayText:', str(json['displayText']).replace("%n", " <br> "))
+        # open gate
+        subprocess.run(['python', 'GatOpen.py', str(json['access'])])
+    except:
+        print("incorrect return data")
+        print("---------------------")
+        print(r.text)
+
+else:
+    print("Error Webservice")
     print(r.status_code)
-    sys.exit(0)
-
-print(r.text)
-dom = xml.dom.minidom.parseString(r.text)
-
-# element = dom.getElementsByTagName('displayText')[0]
-try:
-    access = getXmlValue(dom, 'access')
-except Exception as err:
-    # return e.args[0]
-    access = "0"
-
-print('access:', access)
-print('direction:', getXmlValue(dom, 'direction'))
-print('displayText:', getXmlValue(dom, 'displayText').replace("%n", "\n"))
-# print('ticketId:', getXmlValue(dom, 'ticketId'))
-
-subprocess.run(['python', 'GatOpen.py', access])
