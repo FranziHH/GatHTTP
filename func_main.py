@@ -33,7 +33,7 @@ def getConfigRequestParams():
 
     try:
         url = config['Request']['url']
-        user = config['Request']['user']
+        user = config['Request']['username']
         password = config['Request']['password']
         timeout = int(config['Request']['timeout'])
     except Exception as error:
@@ -131,3 +131,16 @@ def getHostConfig():
         raise RuntimeError('getHostConfig parameter missing') from error
 
     return [url, username, password]
+
+
+def getGatConfig():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        TimeOpen = int(config['GatOpen']['TimeOpen'])
+        WarnLoop = int(config['GatOpen']['WarnLoop'])
+    except Exception as e:
+        raise RuntimeError('getGatConfig parameter missing') from error
+
+    return [TimeOpen, WarnLoop]

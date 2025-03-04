@@ -1,9 +1,26 @@
 import time
+import serial
+from func_main import *
+
+def GetRS232() -> serial.Serial:
+    try:
+        cfgRs232 = getConfigReader()
+    except Exception as error:
+        print(error.args)
+        exit(0)
+
+    baud_rate = cfgRs232[0]
+    com_port = cfgRs232[1]
+    bc_prefix = cfgRs232[2]
+    rs232_timeout = cfgRs232[3]
+
+    s = serial.Serial(com_port, baud_rate)
+    s.flush
+    return s
+
 
 # color: GREEN/RED
 # time: max 4 digits as MilliSeconds '1000' = 1 Second
-
-
 def SetLED(color: str, time: int):
     time = str(time)
     if (len(time) > 4):
@@ -21,11 +38,10 @@ def SetLED(color: str, time: int):
 
     return LED.encode()
 
+
 # freq: max 4 digits as Hertz '1000' = 1000Hz
 # time: max 3 digits as MilliSeconds '100' = 0.1 Second
 # vol: max 2 digits as volume 1 - 20: Loudest 20
-
-
 def SetBeep(freq: int, time: int, vol: int):
     freq = str(freq)
     if (len(freq) > 4):
@@ -49,7 +65,14 @@ def SetBeep(freq: int, time: int, vol: int):
     return BEEP.encode()
 
 
-def BeepWarning(ser: object, repeat: int):
+def WriteLED(color: str, time: int):
+    ser = GetRS232()
+    ser.write(SetLED(color, time))
+    return
+
+
+def BeepWarning(repeat: int):
+    ser = GetRS232()
     j = 0
     while (j < repeat):
         j += 1
@@ -66,7 +89,8 @@ def BeepWarning(ser: object, repeat: int):
     return
 
 
-def BeepFailed(ser: object, repeat: int):
+def BeepFailed(repeat: int):
+    ser = GetRS232()
     j = 0
     while (j < repeat):
         j += 1
@@ -82,7 +106,8 @@ def BeepFailed(ser: object, repeat: int):
     return
 
 
-def BeepEntry(ser: object, repeat: int):
+def BeepEntry(repeat: int):
+    ser = GetRS232()
     j = 0
     while (j < repeat):
         j += 1

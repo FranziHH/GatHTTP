@@ -2,8 +2,8 @@
 
 import serial
 import time
-from functions import *
-from func_rs232 import *
+from functions.func_main import *
+from functions.func_rs232 import *
 
 try:
     cfgRs232 = getConfigReader()

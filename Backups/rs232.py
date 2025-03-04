@@ -2,7 +2,7 @@
 
 import serial
 import time
-from functions import *
+from functions.func_main import *
 
 try:
     req_params = getConfigRequestParams()

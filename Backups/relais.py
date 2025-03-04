@@ -7,7 +7,7 @@ from func_rs485 import *
 import time
 
 # print(RelaisOn(1, 7))
-# print(RelaisOff(1, 255))
+print(RelaisOff(1, 255))
 
 # print(SetStatus(1, '10101010'))
 # print(SetStatus(2, '01010101'))
@@ -18,7 +18,7 @@ print(GetStatus(2, 255))
 # print(SetAddr(2))
 # print(GetAddr())
 
-# print(GetVersion(1))
+print(GetVersion(1))
 
 # 0: 4800
 # 1: 9600
