@@ -2,7 +2,6 @@
 
 from class_rs232 import *
 from class_request import *
-from class_gat import *
 
 req = Request()
 ser = RS232()

@@ -24,6 +24,8 @@ class RS232:
 
         self.serial = serial.Serial(self.com_port, self.baud_rate)
         self.serial.flush
+        # flush does not do what you expect, workaround is read_all
+        self.serial.read_all()
 
     # color: GREEN/RED
     # time: max 4 digits as MilliSeconds '1000' = 1 Second
@@ -130,7 +132,8 @@ class RS232:
         rfid = ""
         loopFlag = True
 
-        # first flush all datas
+        self.serial.flush
+        # flush does not do what you expect, workaround is read_all
         self.serial.read_all()
 
         while loopFlag:
