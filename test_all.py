@@ -18,5 +18,4 @@ while(1):
     print(req.retStr)
     print(req.access)
     ser.GatOpen(req.access)
-    ser.serial.flush
     print("-----")
