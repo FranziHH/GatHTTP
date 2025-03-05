@@ -1,31 +1,55 @@
-from func_main import *
 import RPi.GPIO as GPIO            # import RPi.GPIO module
 import serial
 import time
+import configparser
+
 
 class RS232:
     def __init__(self):
         try:
-            cfgRs232 = getConfigReader()
-            cfgGat = getGatConfig()
+            self.getConfigReader()
+            self.getGatConfig()
         except Exception as error:
             print(error.args)
             exit(0)
-
-        self.baud_rate = cfgRs232[0]
-        self.com_port = cfgRs232[1]
-        self.bc_prefix = cfgRs232[2]
-        self.rs232_timeout = cfgRs232[3]
-        self.switch_pairs = cfgRs232[4]
-        self.convert_to_dec = cfgRs232[5]
-
-        self.TimeOpen = cfgGat[0]
-        self.WarnLoop = cfgGat[1]
 
         self.serial = serial.Serial(self.com_port, self.baud_rate)
         self.serial.flush
         # flush does not do what you expect, workaround is read_all
         self.serial.read_all()
+
+    def str2bool(self, v):
+        return v.lower() in ("yes", "true", "t", "1")
+
+    def getConfigReader(self):
+        config = configparser.ConfigParser()
+        config.read('datas/config.ini')
+
+        try:
+            self.baud_rate = config['Reader']['baud_rate']
+            self.com_port = config['Reader']['com_port']
+            self.bc_prefix = config['Reader']['bc_prefix']
+            self.rs232_timeout = float(config['Reader']['timeout'])
+            self.switch_pairs = int(config['Reader']['rfid_switch_pairs'])
+            self.convert_to_dec = int(config['Reader']['rfid_convert_to_dec'])
+        except Exception as error:
+            raise RuntimeError('config Reader parameter missing') from error
+
+        return
+
+    def getGatConfig(self):
+        config = configparser.ConfigParser()
+        config.read('datas/config.ini')
+
+        try:
+            self.TimeOpen = int(config['GatOpen']['TimeOpen'])
+            self.WarnLoop = int(config['GatOpen']['WarnLoop'])
+            self.UseBeep = self.str2bool(config['GatOpen']['UseBeep'])
+            self.GatName = config['GatOpen']['GatName']
+        except Exception as e:
+            raise RuntimeError('getGatConfig parameter missing') from error
+
+        return
 
     # color: GREEN/RED
     # time: max 4 digits as MilliSeconds '1000' = 1 Second
@@ -46,10 +70,10 @@ class RS232:
 
         return LED.encode()
 
-
     # freq: max 4 digits as Hertz '1000' = 1000Hz
     # time: max 3 digits as MilliSeconds '100' = 0.1 Second
     # vol: max 2 digits as volume 1 - 20: Loudest 20
+
     def SetBeep(self, freq: int, time: int, vol: int):
         freq = str(freq)
         if (len(freq) > 4):
@@ -72,11 +96,9 @@ class RS232:
         BEEP = BEEP.replace("XXV", vol + "V")
         return BEEP.encode()
 
-
     def WriteLED(self, color: str, time: int):
         self.serial.write(self.SetLED(color, time))
         return
-
 
     def BeepWarning(self, repeat: int):
         j = 0
@@ -94,7 +116,6 @@ class RS232:
 
         return
 
-
     def BeepFailed(self, repeat: int):
         j = 0
         while (j < repeat):
@@ -109,7 +130,6 @@ class RS232:
                 time.sleep(.05)
 
         return
-
 
     def BeepEntry(self, repeat: int):
         j = 0
@@ -127,6 +147,8 @@ class RS232:
         return
 
     def ReadBarcode(self):
+        # retBC[0] - Barcode
+        # retBC[1] - RFID
         buffer = ""
         barcode = ""
         rfid = ""
@@ -180,15 +202,16 @@ class RS232:
             DO = DO1  # green Light -> Open Gate
         else:
             DO = DO0  # red Light -> AccessDenied
-            
+
         GPIO.setmode(GPIO.BCM)             # choose BCM or BOARD
         GPIO.setup(DO, GPIO.OUT)
         GPIO.output(DO, 1)
 
-        if out == "1":
-            self.BeepEntry(self.WarnLoop)
-        else:
-            self.BeepWarning(self.WarnLoop)
+        if self.UseBeep:
+            if out == "1":
+                self.BeepEntry(self.WarnLoop)
+            else:
+                self.BeepWarning(self.WarnLoop)
 
         time.sleep(self.TimeOpen)
         GPIO.output(DO, 0)
