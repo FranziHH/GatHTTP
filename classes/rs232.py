@@ -6,6 +6,10 @@ import configparser
 
 class RS232:
     def __init__(self):
+        self.config = configparser.ConfigParser()
+        self.config.read('datas/config.ini')
+        self.firstRead = True   # Help Flag for BarcodeReader
+
         try:
             self.getConfigReader()
             self.getGatConfig()
@@ -22,31 +26,25 @@ class RS232:
         return v.lower() in ("yes", "true", "t", "1")
 
     def getConfigReader(self):
-        config = configparser.ConfigParser()
-        config.read('datas/config.ini')
-
         try:
-            self.baud_rate = config['Reader']['baud_rate']
-            self.com_port = config['Reader']['com_port']
-            self.bc_prefix = config['Reader']['bc_prefix']
-            self.rs232_timeout = float(config['Reader']['timeout'])
-            self.switch_pairs = int(config['Reader']['rfid_switch_pairs'])
-            self.convert_to_dec = int(config['Reader']['rfid_convert_to_dec'])
+            self.baud_rate = self.config['Reader']['baud_rate']
+            self.com_port = self.config['Reader']['com_port']
+            self.bc_prefix = self.config['Reader']['bc_prefix']
+            self.rs232_timeout = float(self.config['Reader']['timeout'])
+            self.switch_pairs = int(self.config['Reader']['rfid_switch_pairs'])
+            self.convert_to_dec = int(self.config['Reader']['rfid_convert_to_dec'])
         except Exception as error:
             raise RuntimeError('config Reader parameter missing') from error
 
         return
 
     def getGatConfig(self):
-        config = configparser.ConfigParser()
-        config.read('datas/config.ini')
-
         try:
-            self.TimeOpen = int(config['GatOpen']['TimeOpen'])
-            self.WarnLoop = int(config['GatOpen']['WarnLoop'])
-            self.UseBeep = self.str2bool(config['GatOpen']['UseBeep'])
-            self.GatName = config['GatOpen']['GatName']
-        except Exception as e:
+            self.TimeOpen = int(self.config['GatOpen']['TimeOpen'])
+            self.WarnLoop = int(self.config['GatOpen']['WarnLoop'])
+            self.UseBeep = self.str2bool(self.config['GatOpen']['UseBeep'])
+            self.GatName = self.config['GatOpen']['GatName']
+        except Exception as error:
             raise RuntimeError('getGatConfig parameter missing') from error
 
         return
@@ -154,9 +152,12 @@ class RS232:
         rfid = ""
         loopFlag = True
 
-        self.serial.flush
-        # flush does not do what you expect, workaround is read_all
-        self.serial.read_all()
+        if (not self.firstRead):
+            self.serial.flush
+            # flush does not do what you expect, workaround is read_all
+            self.serial.read_all()
+            
+        self.firstRead = False
 
         while loopFlag:
             if (self.serial.inWaiting() > 0):

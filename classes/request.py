@@ -22,6 +22,8 @@ class Request:
             self.user = config['Request']['username']
             self.password = config['Request']['password']
             self.timeout = int(config['Request']['timeout'])
+            self.lf_replace = config['Request']['lf_replace'] or ' '
+            self.lf_replace = self.lf_replace.replace("\\n", "\n")
         except Exception as error:
             raise RuntimeError('config Request parameter missing') from error
 
@@ -86,7 +88,7 @@ class Request:
                 json = r.json()
                 retStr = 'access.....: ' + str(json['access']) + "\n"
                 retStr += 'direction..: ' + str(json['direction']) + "\n"
-                retStr += 'displayText: ' + str(json['displayText']).replace("%n", " <br> ")
+                retStr += 'displayText: ' + str(json['displayText']).replace("%n", self.lf_replace)
                 return [True, retStr, str(json['access'])]
             except:
                 retStr = "incorrect return data" + "\n"
