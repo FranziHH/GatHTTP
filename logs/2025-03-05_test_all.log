@@ -1,0 +1,13 @@
+2025-03-05 17:47:41 -----
+2025-03-05 17:47:41 Start
+2025-03-05 17:47:41 -----
+2025-03-05 17:47:55 RFID: 16142378808153038991
+2025-03-05 17:47:55 Starting new HTTPS connection (1): gathttp.tell-me.at:443
+2025-03-05 17:47:55 https://gathttp.tell-me.at:443 "POST /index.php HTTP/1.1" 200 None
+2025-03-05 17:47:55 access.....: 0, direction..: 0, displayText: Zutritt verweigert, für Gerät Nr My Test Access
+2025-03-05 17:48:03 -----
+2025-03-05 17:48:10 RFID: 16142378808153038991
+2025-03-05 17:48:10 Starting new HTTPS connection (1): gathttp.tell-me.at:443
+2025-03-05 17:48:10 https://gathttp.tell-me.at:443 "POST /index.php HTTP/1.1" 200 None
+2025-03-05 17:48:10 access.....: 1, direction..: 1, displayText: Bitte eintreten, Karte: 1614237880815303
+2025-03-05 17:48:18 -----

@@ -8,7 +8,6 @@ class RS232:
     def __init__(self):
         self.config = configparser.ConfigParser()
         self.config.read('datas/config.ini')
-        self.firstRead = True   # Help Flag for BarcodeReader
 
         try:
             self.getConfigReader()
@@ -112,6 +111,7 @@ class RS232:
                 self.serial.write(self.SetBeep(1000, 200, 20))
                 time.sleep(.2)
 
+        time.sleep(.2)
         return
 
     def BeepFailed(self, repeat: int):
@@ -127,6 +127,7 @@ class RS232:
                 self.serial.write(self.SetBeep(freq, 50, 20))
                 time.sleep(.05)
 
+        time.sleep(.2)
         return
 
     def BeepEntry(self, repeat: int):
@@ -142,6 +143,7 @@ class RS232:
                 self.serial.write(self.SetBeep(freq, 50, 20))
                 time.sleep(.05)
 
+        time.sleep(.2)
         return
 
     def ReadBarcode(self):
@@ -152,12 +154,9 @@ class RS232:
         rfid = ""
         loopFlag = True
 
-        if (not self.firstRead):
-            self.serial.flush
-            # flush does not do what you expect, workaround is read_all
-            self.serial.read_all()
-            
-        self.firstRead = False
+        self.serial.flush
+        # flush does not do what you expect, workaround is read_all
+        self.serial.read_all()
 
         while loopFlag:
             if (self.serial.inWaiting() > 0):
