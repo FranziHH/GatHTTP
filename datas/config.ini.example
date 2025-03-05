@@ -13,11 +13,16 @@ req_param_2 = GateNo=1
 req_barcode = Barcode
 # Name RFID Param
 req_rfid = Rfid
+# replace LineFeed with
+# eg: \n OR %%n (->%n) OR space for one empty Space OR <br>
+lf_replace = \n
 
 [GatOpen]
 # Seconds
 TimeOpen = 5
 WarnLoop = 2
+UseBeep = True
+GatName = My Test Access
 
 [Reader]
 baud_rate = 9600

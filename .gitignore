@@ -1,5 +1,6 @@
 .env/
 __pycache__/
+*.log
 .liesmich.txt
 .python.txt
 config.ini
