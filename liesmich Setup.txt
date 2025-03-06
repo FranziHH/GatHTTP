@@ -1,0 +1,10 @@
+Infos für den Raspi angeben
+===========================
+
+getHost - gibt die vorhandenen Daten zurück
+getHost [Location] [Description]
+    beide Infos sind zur besseren Übersicht und werden in der online Liste dargestellt
+
+setHost [NewName]
+    setzt einen neuen HostName um verschiedene Raspis in einem Netzwerk über den Namen 
+    HostName.local ansprechen zu können

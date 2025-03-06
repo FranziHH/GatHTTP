@@ -1,4 +1,0 @@
-Hostname...: PA001
-ID.........: 001
-Location...: Franzi Test
-Description: Auch Ümläute gehen
