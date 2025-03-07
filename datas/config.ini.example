@@ -19,8 +19,9 @@ lf_replace = \n
 
 [GatOpen]
 # Seconds
-TimeOpen = 5
-WarnLoop = 2
+TimeOpen = 3
+WarnLoop0 = 2
+WarnLoop1 = 1
 UseBeep = True
 GatName = My Test Access
 

@@ -8,3 +8,5 @@ getHost [Location] [Description]
 setHost [NewName]
     setzt einen neuen HostName um verschiedene Raspis in einem Netzwerk über den Namen 
     HostName.local ansprechen zu können
+
+sudo systemctl stop gathttp

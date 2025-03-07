@@ -40,7 +40,8 @@ class RS232:
     def getGatConfig(self):
         try:
             self.TimeOpen = int(self.config['GatOpen']['TimeOpen'])
-            self.WarnLoop = int(self.config['GatOpen']['WarnLoop'])
+            self.WarnLoop0 = int(self.config['GatOpen']['WarnLoop0'])
+            self.WarnLoop1 = int(self.config['GatOpen']['WarnLoop1'])
             self.UseBeep = self.str2bool(self.config['GatOpen']['UseBeep'])
             self.GatName = self.config['GatOpen']['GatName']
         except Exception as error:
@@ -113,6 +114,21 @@ class RS232:
 
         time.sleep(.2)
         return
+
+    def BeepOhNo(self, repeat: int):
+        j = 0
+        while (j < repeat):
+            j += 1
+            self.serial.write(self.SetLED("red", 1200))
+
+            self.serial.write(self.SetBeep(2000, 200, 20))
+            time.sleep(.25)
+            self.serial.write(self.SetBeep(1000, 500, 20))
+            time.sleep(.35)
+
+        time.sleep(.2)
+        return
+
 
     def BeepFailed(self, repeat: int):
         j = 0
@@ -209,9 +225,10 @@ class RS232:
 
         if self.UseBeep:
             if out == "1":
-                self.BeepEntry(self.WarnLoop)
+                self.BeepEntry(self.WarnLoop0)
             else:
-                self.BeepWarning(self.WarnLoop)
+                # self.BeepWarning(self.WarnLoop)
+                self.BeepOhNo(self.WarnLoop1)
 
         time.sleep(self.TimeOpen)
         GPIO.output(DO, 0)

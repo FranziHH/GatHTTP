@@ -13,7 +13,7 @@ if [ $NEW_HOSTNAME = $CURRENT_HOSTNAME ]; then
     echo "Name already set"
 else
     echo "Setting Name" $NEW_HOSTNAME
-    echo $host_name | sudo tee /etc/hostname
+    echo $NEW_HOSTNAME | sudo tee /etc/hostname
     sudo sed -i "/127.0.1.1/s/$CURRENT_HOSTNAME/$NEW_HOSTNAME/" /etc/hosts
     sudo hostnamectl set-hostname $NEW_HOSTNAME
     sudo systemctl restart avahi-daemon
