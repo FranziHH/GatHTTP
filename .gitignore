@@ -1,4 +1,5 @@
 .env/
+.bash_aliases
 __pycache__/
 *.log
 .liesmich*.txt

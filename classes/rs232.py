@@ -5,7 +5,8 @@ import configparser
 
 
 class RS232:
-    def __init__(self):
+    def __init__(self, logger):
+        self.logger = logger
         self.config = configparser.ConfigParser()
         self.config.read('datas/config.ini')
 
@@ -17,9 +18,14 @@ class RS232:
             exit(0)
 
         self.serial = serial.Serial(self.com_port, self.baud_rate)
-        self.serial.flush
+        if(not self.serial.isOpen()):
+            self.serial.open()
+        self.serial.reset_input_buffer()
+        self.serial.reset_output_buffer()
+        
+        # self.serial.flush
         # flush does not do what you expect, workaround is read_all
-        self.serial.read_all()
+        # self.serial.read_all()
 
     def str2bool(self, v):
         return v.lower() in ("yes", "true", "t", "1")
@@ -175,37 +181,43 @@ class RS232:
         self.serial.read_all()
 
         while loopFlag:
-            if (self.serial.inWaiting() > 0):
-                buffer += str(self.serial.read(self.serial.inWaiting()))
+            try:
+                if (self.serial.inWaiting() > 0):
+                    buffer += str(self.serial.read(self.serial.inWaiting()))
 
-                # wait for new data after each line
-                timeout = time.time() + self.rs232_timeout
-                while not self.serial.inWaiting() and timeout > time.time():
-                    pass
-                if not self.serial.inWaiting():
-                    # break
-                    tmp_bc = buffer[2:-1]
-                    if (tmp_bc[:len(self.bc_prefix)] == self.bc_prefix):
-                        # Barcode
-                        barcode = tmp_bc[len(self.bc_prefix):]
-                        loopFlag = False
-                    else:
-                        # RFID
-                        if (self.switch_pairs == 1):
-                            count = len(tmp_bc)
-                            rfidHex = ''
-                            while count > 1:
-                                rfidHex += tmp_bc[count - 2:count]
-                                count -= 2
+                    # wait for new data after each line
+                    timeout = time.time() + self.rs232_timeout
+                    while not self.serial.inWaiting() and timeout > time.time():
+                        pass
+                    if not self.serial.inWaiting():
+                        # break
+                        tmp_bc = buffer[2:-1]
+                        if (tmp_bc[:len(self.bc_prefix)] == self.bc_prefix):
+                            # Barcode
+                            barcode = tmp_bc[len(self.bc_prefix):]
+                            loopFlag = False
                         else:
-                            rfidHex = tmp_bc
+                            # RFID
+                            if (self.switch_pairs == 1):
+                                count = len(tmp_bc)
+                                rfidHex = ''
+                                while count > 1:
+                                    rfidHex += tmp_bc[count - 2:count]
+                                    count -= 2
+                            else:
+                                rfidHex = tmp_bc
 
-                        if (self.convert_to_dec == 1):
-                            rfid = str(int(rfidHex, 16))
-                        else:
-                            rfid = rfidHex
+                            if (self.convert_to_dec == 1):
+                                rfid = str(int(rfidHex, 16))
+                            else:
+                                rfid = rfidHex
 
-                        loopFlag = False
+                            loopFlag = False
+
+            except Exception as error:
+                print('Error: ' + error.args)
+                self.logger.error('Error: ' + error.args)
+                pass
 
         return barcode, rfid
 

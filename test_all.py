@@ -22,30 +22,44 @@ from classes.rs232 import *
 from classes.request import *
 
 req = Request()
-ser = RS232()
+ser = RS232(logger)
 
-while (1):
-    retBC = ser.ReadBarcode()
-    # retBC[0] - Barcode
-    # retBC[1] - RFID
-    if retBC[0] != "":
-        print('BC: ' + retBC[0])
-        logger.info('BC: ' + retBC[0])
-    else:
-        print('RFID: ' + retBC[1])
-        logger.info('RFID: ' + retBC[1])
+logger.info('classes created')
+logger.info("-----")
+ser.BeepOhNo(1)
 
-    retReq = req.JsonRequest(ser.GatName, retBC[0], retBC[1])
-    # retReq[0] - Status (True/False)
-    # retReq[1] - Return Message (Text)
-    # retReq[2] - Access 0 - False, 1 - True (String)
-    if (retReq[0]):
-        print(retReq[1])
-        logger.info(retReq[1].replace("\n", ", "))
-        ser.GatOpen(retReq[2])
-    else:
-        print('Error: ' + retReq[1].replace("\n", ", "))
-        logger.error(retReq[1])
+try:
+    while (True):
+        retBC = ser.ReadBarcode()
+        # retBC[0] - Barcode
+        # retBC[1] - RFID
+        if retBC[0] != "":
+            print('BC: ' + retBC[0])
+            logger.info('BC: ' + retBC[0])
+        else:
+            print('RFID: ' + retBC[1])
+            logger.info('RFID: ' + retBC[1])
 
-    print("-----")
-    logger.info("-----")
+        retReq = req.JsonRequest(ser.GatName, retBC[0], retBC[1])
+        # retReq[0] - Status (True/False)
+        # retReq[1] - Return Message (Text)
+        # retReq[2] - Access 0 - False, 1 - True (String)
+        if (retReq[0]):
+            print(retReq[1])
+            logger.info(retReq[1].replace("\n", ", "))
+            ser.GatOpen(retReq[2])
+        else:
+            print('Error: ' + retReq[1].replace("\n", ", "))
+            logger.error(retReq[1])
+
+        print("-----")
+        logger.info("-----")
+
+except Exception as error:
+    print('Error: ' + error.args)
+    logger.error('Error: ' + error.args)
+    pass
+
+except KeyboardInterrupt as error:
+    print("Stopping...")
+    logger.info("Stopping...")
