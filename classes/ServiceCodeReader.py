@@ -9,6 +9,9 @@ class ServiceCodeReader:
         }
 
     def extract_code(self, input_string):
+        if not "mcdonalds" in input_string:
+            return ""
+
         # Überprüfen, ob der gesamte String der Code ist
         if len(input_string) < 24:
             return ""
@@ -46,6 +49,9 @@ class ServiceCodeReader:
         while i < len(barcode) and barcode[i] == "C":
             i += 1
         return barcode[i:] if i > 0 else barcode
+
+    def isValid(self, barcode):
+        return (True, False)[self.extract_code(barcode) == ""]    
 
     def decode_barcode(self, barcode):
         store_id = None

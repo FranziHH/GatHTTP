@@ -20,13 +20,23 @@ logger.info("-----")
 
 from classes.rs232 import *
 from classes.request import *
+from classes.ServiceCodeReader import *
 
 req = Request()
 ser = RS232(logger)
+reader = ServiceCodeReader()
 
 logger.info('classes created')
 logger.info("-----")
 ser.BeepOhNo(1)
+
+def doServiceCode(barcode):
+    barcode_data = reader.decode_barcode(barcode)
+    print(barcode_data)
+    logger.info(barcode_data)
+    print("-----")
+    logger.info("-----")
+    return
 
 try:
     while (True):
@@ -36,6 +46,13 @@ try:
         if retBC[0] != "":
             print('BC: ' + retBC[0])
             logger.info('BC: ' + retBC[0])
+
+            if reader.isValid(retBC[0]):
+                print('exec ServiceCode')
+                logger.info('exec ServiceCode')
+                doServiceCode(retBC[0])
+                continue
+
         else:
             print('RFID: ' + retBC[1])
             logger.info('RFID: ' + retBC[1])
