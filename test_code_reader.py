@@ -15,7 +15,6 @@ barcode_data = reader.decode_barcode("https://mcdonalds.fast-insight.com/voc/at/
 print(barcode_data)
 '''
 
-'''
 barcode_data = reader.decode_barcode("https://mcdonalds.fast-insight.com/voc/at/de?QRCODE=true&CODE=CC9F-N4GY-K7CC-6CCN-CHTR")
 lastID = myDB.insertData(barcode_data)
 print(lastID)
@@ -23,6 +22,5 @@ print(lastID)
 myDB.updateEntry(lastID, 1)
 
 myDB.test()
-'''
 
 print(myDB.countEntry('CC9F-N4GY-K7CC-6CCN-CHTR'))
