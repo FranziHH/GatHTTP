@@ -61,7 +61,9 @@ class ServiceCodeReader:
         sales_type = None
         checker = None
         date_and_time = None
-
+        date_time = None
+        stime = None
+        
         replaced_string = self.delete_additional_chars(self.extract_code(barcode)).replace("-", "")
         
         if replaced_string != "":
@@ -95,8 +97,12 @@ class ServiceCodeReader:
                 order_id = self.convert_special_base25_to_base10(replaced_string[12:14])
                 amount = self.convert_special_base25_to_base10(replaced_string[14:-1])
 
+            date_time = datetime.strptime(str(date_and_time), "%y%m%d%H%M")
+            stime = date_time.strftime('%Y-%m-%d %H:%M:%S')
+
         return {
-            'dateAndTime': date_and_time,
+            'dateTime': date_time,
+            'strDateTime': stime,
             'storeID': store_id,
             'posID': pos_id,
             'orderID': order_id,
