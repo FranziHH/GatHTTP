@@ -12,21 +12,26 @@ class ServiceCodeReader:
         if not "mcdonalds" in input_string:
             return ""
 
+        '''
         # Überprüfen, ob der gesamte String der Code ist
         if len(input_string) < 24:
             return ""
 
         if len(input_string) == 24:
             return input_string
+        '''
 
         # Extrahiere den Code nach 'CODE='
         if "&CODE=" in input_string:
             start_index = input_string.find("&CODE=") + len("&CODE=")
             output_string = input_string[start_index:]
+            '''
             if len(output_string) == 24:
                 return output_string
             else:
                 return "" 
+            '''
+            return output_string
 
         # Rückgabe für den Fall, dass kein 'CODE=' enthalten ist
         return ""
@@ -63,8 +68,10 @@ class ServiceCodeReader:
         date_and_time = None
         date_time = None
         stime = None
-        
-        replaced_string = self.delete_additional_chars(self.extract_code(barcode)).replace("-", "")
+        ret_barcode = None
+
+        ret_barcode = self.extract_code(barcode)
+        replaced_string = self.delete_additional_chars(ret_barcode).replace("-", "")
         
         if replaced_string != "":
 
@@ -109,5 +116,6 @@ class ServiceCodeReader:
             'amount': amount,
             'salesType': sales_type,
             'checker': checker,
-            'replacedString': replaced_string
+            # 'replacedString': replaced_string,
+            'barcode': ret_barcode
         }
