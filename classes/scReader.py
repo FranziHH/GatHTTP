@@ -1,6 +1,6 @@
 from datetime import datetime
 
-class ServiceCodeReader:
+class scReader:
     def __init__(self):
         self.base25_map = {
             0: "C", 1: "M", 2: "7", 3: "W", 4: "D", 5: "6", 6: "N", 7: "4", 8: "R", 9: "H",

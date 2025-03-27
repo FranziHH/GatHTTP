@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from classes.sc_mysql import *
+from classes.scMySQL import *
 
-myDB = sc_mysql()
+myDB = scMySQL(None)
 
 print(myDB.getDatabase())

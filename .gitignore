@@ -8,4 +8,3 @@ config.ini
 getHost.py
 getHostJSON.py
 datas
-*mysql.py

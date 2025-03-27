@@ -39,3 +39,13 @@ rfid_convert_to_dec = 1
 url = 
 username = 
 password = 
+
+[scReader]
+host = 
+user = 
+passwd = 
+database = 
+storeID = 11
+maxEntrys = 5
+# Minutes
+timeLimit = 120

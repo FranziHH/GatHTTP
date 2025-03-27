@@ -20,11 +20,13 @@ logger.info("-----")
 
 from classes.rs232 import *
 from classes.request import *
-from classes.ServiceCodeReader import *
+from classes.scReader import *
+from classes.scMySQL import *
 
 req = Request()
 ser = RS232(logger)
-reader = ServiceCodeReader()
+reader = scReader()
+myDB = scMySQL(logger)
 
 logger.info('classes created')
 logger.info("-----")
@@ -32,10 +34,8 @@ ser.BeepOhNo(1)
 
 def doServiceCode(barcode):
     barcode_data = reader.decode_barcode(barcode)
-    print(barcode_data)
-    logger.info(barcode_data)
-    print("-----")
-    logger.info("-----")
+    retData = myDB.processBarcode(barcode_data)
+    ser.GatOpen(retData['entry'])
     return
 
 try:
@@ -47,11 +47,12 @@ try:
             print('BC: ' + retBC[0])
             logger.info('BC: ' + retBC[0])
 
-            if reader.isValid(retBC[0]):
-                print('exec ServiceCode')
-                logger.info('exec ServiceCode')
-                doServiceCode(retBC[0])
-                continue
+            if myDB.active:
+                if reader.isValid(retBC[0]):
+                    print('exec ServiceCode')
+                    logger.info('exec ServiceCode')
+                    doServiceCode(retBC[0])
+                    continue
 
         else:
             print('RFID: ' + retBC[1])
