@@ -49,3 +49,5 @@ storeID = 11
 maxEntrys = 5
 # Minutes
 timeLimit = 120
+# Days
+timeCleanUp = 14

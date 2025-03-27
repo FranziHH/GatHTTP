@@ -216,7 +216,8 @@ class RS232:
 
             except Exception as error:
                 print('Error: ' + error.args)
-                self.logger.error('Error: ' + error.args)
+                if self.logger is not None:
+                    self.logger.error('Error: ' + error.args)
                 pass
 
         return barcode, rfid

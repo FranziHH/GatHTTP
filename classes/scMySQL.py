@@ -1,20 +1,17 @@
 import mysql.connector
 import atexit
 import configparser
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class scMySQL:
     def __init__(self, logger):
         self.active = False
+        self.errMsg = ""
         self.logger = logger
         self.config = configparser.ConfigParser()
         self.config.read('datas/config.ini')
 
-        try:
-            self.getConfigReader()
-        except Exception as error:
-            print(error.args)
-            exit(0)
+        self.getConfigReader()
 
         if self.active:
             self.db = mysql.connector.connect(
@@ -36,21 +33,21 @@ class scMySQL:
 
     def getConfigReader(self):
         try:
-            self.active = self.str2bool(self.config['Default']['scReader'])
-        except:
+            self.host = self.config['scReader']['host']
+            self.user = self.config['scReader']['user']
+            self.passwd = self.config['scReader']['passwd']
+            self.database = self.config['scReader']['database']
+            self.storeID = int(self.config['scReader']['storeID'])
+            self.maxEntrys = int(self.config['scReader']['maxEntrys'])
+            self.timeLimit = int(self.config['scReader']['timeLimit'])
+            self.timeCleanUp = int(self.config['scReader']['timeCleanUp'])
+            self.active = True
+        except Exception as error:
+            print('config scReader parameter missing')
+            if self.logger is not None:
+                self.logger.info('config scReader parameter missing')
+            self.errMsg = 'config scReader parameter missing'
             pass
-
-        if self.active:
-            try:
-                self.host = self.config['scReader']['host']
-                self.user = self.config['scReader']['user']
-                self.passwd = self.config['scReader']['passwd']
-                self.database = self.config['scReader']['database']
-                self.storeID = int(self.config['scReader']['storeID'])
-                self.maxEntrys = int(self.config['scReader']['maxEntrys'])
-                self.timeLimit = int(self.config['scReader']['timeLimit'])
-            except Exception as error:
-                raise RuntimeError('config scReader parameter missing') from error
 
         return
     
@@ -116,9 +113,23 @@ class scMySQL:
         self.cursor.execute(sql, val)
         return self.cursor.fetchone()[0]
     
-    def test(self):
-        self.cursor.execute("SELECT * FROM sc_entry")
-        res = self.cursor.fetchall()
+    def cleanUP(self):
+        tsCleanUP = datetime.now() - timedelta(days=self.timeCleanUp)
+        stime = tsCleanUP.strftime('%Y-%m-%d %H:%M:%S')
+        sql = "DELETE FROM sc_entry WHERE current_ts < %s"
+        val = (stime, )
+        self.cursor.execute(sql, val)
+        self.db.commit()
+        retVal = self.cursor.rowcount
 
-        for x in res:
-            print(x)
+        print("----- cleanUP -----")
+        print('delete records before ' + stime)
+        print(str(retVal) + ' records deleted')
+        print("----- cleanUP -----")
+        if self.logger is not None:
+            self.logger.info("----- cleanUP -----")
+            self.logger.info('delete records before ' + stime)
+            self.logger.info(str(retVal) + ' records deleted')
+            self.logger.info("----- cleanUP -----")
+
+        return retVal
