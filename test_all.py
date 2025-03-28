@@ -23,7 +23,7 @@ from classes.request import *
 from classes.scReader import *
 from classes.scMySQL import *
 
-req = Request()
+req = Request(logger)
 ser = RS232(logger)
 reader = scReader()
 myDB = scMySQL(logger)
@@ -31,6 +31,12 @@ myDB = scMySQL(logger)
 logger.info('classes created')
 logger.info("-----")
 ser.BeepOhNo(1)
+
+if not req.active:
+    print('Request is not active!')
+    print("-----")
+    logger.info('Request is not active!')
+    logger.info("-----")
 
 def doServiceCode(barcode):
     barcode_data = reader.decode_barcode(barcode)
@@ -58,17 +64,18 @@ try:
             print('RFID: ' + retBC[1])
             logger.info('RFID: ' + retBC[1])
 
-        retReq = req.JsonRequest(ser.GatName, retBC[0], retBC[1])
-        # retReq[0] - Status (True/False)
-        # retReq[1] - Return Message (Text)
-        # retReq[2] - Access 0 - False, 1 - True (String)
-        if (retReq[0]):
-            print(retReq[1])
-            logger.info(retReq[1].replace("\n", ", "))
-            ser.GatOpen(retReq[2])
-        else:
-            print('Error: ' + retReq[1].replace("\n", ", "))
-            logger.error(retReq[1])
+        if req.active:
+            retReq = req.JsonRequest(ser.GatName, retBC[0], retBC[1])
+            # retReq[0] - Status (True/False)
+            # retReq[1] - Return Message (Text)
+            # retReq[2] - Access 0 - False, 1 - True (String)
+            if (retReq[0]):
+                print(retReq[1])
+                logger.info(retReq[1].replace("\n", ", "))
+                ser.GatOpen(retReq[2])
+            else:
+                print('Error: ' + retReq[1].replace("\n", ", "))
+                logger.error(retReq[1])
 
         print("-----")
         logger.info("-----")

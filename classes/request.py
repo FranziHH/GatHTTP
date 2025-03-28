@@ -3,12 +3,11 @@ import requests
 
 
 class Request:
-    def __init__(self):
-        try:
-            self.getConfigRequestParams()
-        except Exception as error:
-            print(error.args)
-            exit(0)
+    def __init__(self, logger):
+        self.active = False
+        self.errMsg = ""
+        self.logger = logger
+        self.getConfigRequestParams()
 
     def str2bool(self, v):
         return v.lower() in ("yes", "true", "t", "1")
@@ -16,7 +15,12 @@ class Request:
     def getConfigRequestParams(self):
         config = configparser.ConfigParser()
         config.read('datas/config.ini')
-
+        self.url = None
+        self.user = None
+        self.password = None
+        self.timeout = None
+        self.lf_replace = None
+        
         try:
             self.url = config['Request']['url']
             self.user = config['Request']['username']
@@ -24,8 +28,14 @@ class Request:
             self.timeout = int(config['Request']['timeout'])
             self.lf_replace = config['Request']['lf_replace'] or ' '
             self.lf_replace = self.lf_replace.replace("\\n", "\n")
+            self.active = True
         except Exception as error:
-            raise RuntimeError('config Request parameter missing') from error
+            # raise RuntimeError('config Request parameter missing') from error
+            print('config Request parameter missing')
+            if self.logger is not None:
+                self.logger.info('config scReader parameter missing')
+            self.errMsg = 'config scReader parameter missing'
+            pass
 
         # ----- Config Read URL Parameters -----
         self.url_barcode = ''
