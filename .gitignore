@@ -5,6 +5,4 @@ __pycache__/
 .liesmich*.txt
 .python.txt
 config.ini
-getHost.py
-getHostJSON.py
 datas
