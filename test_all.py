@@ -41,7 +41,7 @@ if not req.active:
 def doServiceCode(barcode):
     barcode_data = reader.decode_barcode(barcode)
     retData = myDB.processBarcode(barcode_data)
-    ser.GatOpen(retData['entry'])
+    ser.GatOpen(str(retData['entry']))
     return
 
 try:
