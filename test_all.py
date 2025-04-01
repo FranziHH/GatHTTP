@@ -44,6 +44,20 @@ def doServiceCode(barcode):
     ser.GatOpen(str(retData['entry']))
     return
 
+def doRequest(retBC):
+    retReq = req.JsonRequest(ser.GatName, retBC[0], retBC[1])
+    # retReq[0] - Status (True/False)
+    # retReq[1] - Return Message (Text)
+    # retReq[2] - Access 0 - False, 1 - True (String)
+    if (retReq[0]):
+        print(retReq[1])
+        logger.info(retReq[1].replace("\n", ", "))
+        ser.GatOpen(retReq[2])
+    else:
+        print('Error: ' + retReq[1].replace("\n", ", "))
+        logger.error(retReq[1])
+    return
+
 try:
     while (True):
         retBC = ser.ReadBarcode()
@@ -58,6 +72,8 @@ try:
                     print('exec ServiceCode')
                     logger.info('exec ServiceCode')
                     doServiceCode(retBC[0])
+                    print("-----")
+                    logger.info("-----")
                     continue
 
         else:
@@ -65,17 +81,12 @@ try:
             logger.info('RFID: ' + retBC[1])
 
         if req.active:
-            retReq = req.JsonRequest(ser.GatName, retBC[0], retBC[1])
-            # retReq[0] - Status (True/False)
-            # retReq[1] - Return Message (Text)
-            # retReq[2] - Access 0 - False, 1 - True (String)
-            if (retReq[0]):
-                print(retReq[1])
-                logger.info(retReq[1].replace("\n", ", "))
-                ser.GatOpen(retReq[2])
-            else:
-                print('Error: ' + retReq[1].replace("\n", ", "))
-                logger.error(retReq[1])
+            print('exec Request')
+            logger.info('exec Request')
+            doRequest(retBC)
+            print("-----")
+            logger.info("-----")
+            continue
 
         print("-----")
         logger.info("-----")

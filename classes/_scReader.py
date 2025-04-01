@@ -9,10 +9,31 @@ class scReader:
         }
 
     def extract_code(self, input_string):
+        '''
+        if not "mcdonalds" in input_string:
+            return ""
+        '''
+
+        '''
+        # Überprüfen, ob der gesamte String der Code ist
+        if len(input_string) < 24:
+            return ""
+
+        if len(input_string) == 24:
+            return input_string
+        '''
+
         # Extrahiere den Code nach 'CODE='
-        if "CODE=" in input_string:
+        if "&CODE=" in input_string:
+            # start_index = input_string.find("&CODE=") + len("&CODE=")
             start_index = input_string.rfind("CODE=") + len("CODE=")
             output_string = input_string[start_index:]
+            '''
+            if len(output_string) == 24:
+                return output_string
+            else:
+                return "" 
+            '''
             return output_string
 
         # Rückgabe für den Fall, dass kein 'CODE=' enthalten ist
