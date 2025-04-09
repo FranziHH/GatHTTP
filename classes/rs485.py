@@ -3,7 +3,7 @@
 import serial
 
 
-class RS485:
+class rs485:
     def __init__(self):
         self.serial = serial.Serial("/dev/ttyACM0", 9600, timeout=0.5)
         self.serial.flush

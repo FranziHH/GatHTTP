@@ -1,31 +1,42 @@
 import RPi.GPIO as GPIO            # import RPi.GPIO module
+import atexit
 import serial
 import time
 import configparser
 
 
-class RS232:
+class rs232:
     def __init__(self, logger):
+        self.init = False
         self.logger = logger
         self.config = configparser.ConfigParser()
         self.config.read('datas/config.ini')
+        self.serial = None
+        self.errMsg = ""
 
-        try:
-            self.getConfigReader()
-            self.getGatConfig()
-        except Exception as error:
-            print(error.args)
-            exit(0)
+        self.getConfigReader()
+        self.getGatConfig()
+
+        if not self.init:
+            return
 
         self.serial = serial.Serial(self.com_port, self.baud_rate)
-        if(not self.serial.isOpen()):
+        if (not self.serial.isOpen()):
             self.serial.open()
         self.serial.reset_input_buffer()
         self.serial.reset_output_buffer()
-        
+
         # self.serial.flush
         # flush does not do what you expect, workaround is read_all
         # self.serial.read_all()
+
+        atexit.register(self.cleanup)
+
+    def cleanup(self):
+        if (self.serial.isOpen()):
+            self.serial.reset_input_buffer()
+            self.serial.reset_output_buffer()
+            self.serial.close()
 
     def str2bool(self, v):
         return v.lower() in ("yes", "true", "t", "1")
@@ -37,9 +48,19 @@ class RS232:
             self.bc_prefix = self.config['Reader']['bc_prefix']
             self.rs232_timeout = float(self.config['Reader']['timeout'])
             self.switch_pairs = int(self.config['Reader']['rfid_switch_pairs'])
-            self.convert_to_dec = int(self.config['Reader']['rfid_convert_to_dec'])
+            self.convert_to_dec = int(
+                self.config['Reader']['rfid_convert_to_dec'])
+            self.init = True
+
         except Exception as error:
-            raise RuntimeError('config Reader parameter missing') from error
+            self.init = False
+            print('config Reader parameter missing')
+            if self.logger is not None:
+                self.logger.info('config Reader parameter missing')
+            if self.errMsg != "":
+                self.errMsg += '\n'
+            self.errMsg += 'config Reader parameter missing'
+            pass
 
         return
 
@@ -49,9 +70,17 @@ class RS232:
             self.WarnLoop0 = int(self.config['GatOpen']['WarnLoop0'])
             self.WarnLoop1 = int(self.config['GatOpen']['WarnLoop1'])
             self.UseBeep = self.str2bool(self.config['GatOpen']['UseBeep'])
-            self.GatName = self.config['GatOpen']['GatName']
+            self.init = True
+            
         except Exception as error:
-            raise RuntimeError('getGatConfig parameter missing') from error
+            self.init = False
+            print('config GatOpen parameter missing')
+            if self.logger is not None:
+                self.logger.info('config GatOpen parameter missing')
+            if self.errMsg != "":
+                self.errMsg += '\n'
+            self.errMsg += 'config GatOpen parameter missing'
+            pass
 
         return
 
@@ -134,7 +163,6 @@ class RS232:
 
         time.sleep(.2)
         return
-
 
     def BeepFailed(self, repeat: int):
         j = 0

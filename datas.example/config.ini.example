@@ -1,4 +1,4 @@
-[request]
+[GatHttp]
 url = 
 username = 
 password = 
@@ -40,7 +40,7 @@ url =
 username = 
 password = 
 
-[scReader]
+[mcdSettings]
 host = 
 user = 
 passwd = 

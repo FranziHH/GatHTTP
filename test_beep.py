@@ -2,9 +2,9 @@
 
 from classes.rs232 import *
 
-ser = RS232()
+cRs232 = rs232(None)
 
-ser.serial.write(ser.SetBeep(2000, 200, 20))
+cRs232.serial.write(cRs232.SetBeep(2000, 200, 20))
 time.sleep(.25)
-ser.serial.write(ser.SetBeep(1000, 500, 20))
+cRs232.serial.write(cRs232.SetBeep(1000, 500, 20))
 time.sleep(.35)

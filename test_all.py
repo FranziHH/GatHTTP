@@ -1,101 +1,107 @@
 #!/usr/bin/env python
-import os
-import sys
-# insert root directory into python module search path
-sys.path.insert(1, os.getcwd())
-
-import logging
-from pathlib import Path
-from datetime import datetime
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename='logs/' + datetime.today().strftime('%Y-%m-%d') + '_' + Path(__file__).stem + '.log',
-                    format='%(asctime)s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    encoding='utf-8',
-                    level=logging.DEBUG)
-
-logger.info("-----")
-logger.info('Start')
-logger.info("-----")
-
+from classes.mcDonalds import *
+from classes.gatHttp import *
 from classes.rs232 import *
-from classes.request import *
-from classes.scReader import *
-from classes.scMySQL import *
+import os
+import signal
+import sys
 
-req = Request(logger)
-ser = RS232(logger)
-reader = scReader()
-myDB = scMySQL(logger)
+from classes.logger import *
+cLogger = logger(os.path.basename(__file__)).logger
 
-logger.info('classes created')
-logger.info("-----")
-ser.BeepOhNo(1)
+cLogger.info("-----")
+cLogger.info('Start')
+cLogger.info("-----")
 
-if not req.active:
-    print('Request is not active!')
+
+cGatHttp = gatHttp(cLogger)
+cRS232 = rs232(cLogger)
+cMcDonalds = mcDonalds(cLogger)
+
+cLogger.info('classes created')
+cLogger.info("-----")
+cRS232.BeepOhNo(1)
+
+if not cGatHttp.init:
+    print('GatHttp is not init!')
     print("-----")
-    logger.info('Request is not active!')
-    logger.info("-----")
+    cLogger.info('GatHttp is not init!')
+    cLogger.info("-----")
 
-def doServiceCode(barcode):
-    barcode_data = reader.decode_barcode(barcode)
-    retData = myDB.processBarcode(barcode_data)
-    ser.GatOpen(str(retData['entry']))
+
+def doMcDonalds(barcode):
+    barcode_data = cMcDonalds.decode_barcode(barcode)
+    retData = cMcDonalds.processBarcode(barcode_data)
+    cRS232.GatOpen(str(retData['entry']))
     return
 
-def doRequest(retBC):
-    retReq = req.JsonRequest(ser.GatName, retBC[0], retBC[1])
-    # retReq[0] - Status (True/False)
-    # retReq[1] - Return Message (Text)
-    # retReq[2] - Access 0 - False, 1 - True (String)
-    if (retReq[0]):
-        print(retReq[1])
-        logger.info(retReq[1].replace("\n", ", "))
-        ser.GatOpen(retReq[2])
+
+def doGatHttp(retBC):
+    request = cGatHttp.JsonRequest(cGatHttp.GatName, retBC[0], retBC[1])
+    # request[0] - Status (True/False)
+    # request[1] - Return Message (Text)
+    # request[2] - Access 0 - False, 1 - True (String)
+    if (request[0]):
+        print(request[1])
+        cLogger.info(request[1].replace("\n", ", "))
+        cRS232.GatOpen(request[2])
     else:
-        print('Error: ' + retReq[1].replace("\n", ", "))
-        logger.error(retReq[1])
+        print('Error: ' + request[1].replace("\n", ", "))
+        cLogger.error(request[1])
     return
 
-try:
-    while (True):
-        retBC = ser.ReadBarcode()
-        # retBC[0] - Barcode
-        # retBC[1] - RFID
-        if retBC[0] != "":
-            print('BC: ' + retBC[0])
-            logger.info('BC: ' + retBC[0])
 
-            if myDB.active:
-                if reader.isValid(retBC[0]):
-                    print('exec ServiceCode')
-                    logger.info('exec ServiceCode')
-                    doServiceCode(retBC[0])
-                    print("-----")
-                    logger.info("-----")
-                    continue
+def main():
+    try:
+        while (True):
+            retBC = cRS232.ReadBarcode()
+            # retBC[0] - Barcode
+            # retBC[1] - RFID
+            if retBC[0] != "":
+                print('BC: ' + retBC[0])
+                cLogger.info('BC: ' + retBC[0])
 
-        else:
-            print('RFID: ' + retBC[1])
-            logger.info('RFID: ' + retBC[1])
+                if cMcDonalds.init:
+                    if cMcDonalds.isValid(retBC[0]):
+                        print('exec McDonalds')
+                        cLogger.info('exec McDonalds')
+                        doMcDonalds(retBC[0])
+                        print("-----")
+                        cLogger.info("-----")
+                        continue
 
-        if req.active:
-            print('exec Request')
-            logger.info('exec Request')
-            doRequest(retBC)
+            else:
+                print('RFID: ' + retBC[1])
+                cLogger.info('RFID: ' + retBC[1])
+
+            if cGatHttp.init:
+                print('exec GatHttp')
+                cLogger.info('exec GatHttp')
+                doGatHttp(retBC)
+                print("-----")
+                cLogger.info("-----")
+                continue
+
             print("-----")
-            logger.info("-----")
-            continue
+            cLogger.info("-----")
 
-        print("-----")
-        logger.info("-----")
+    except Exception as error:
+        print('Error: ' + error.args)
+        cLogger.error('Error: ' + error.args)
+        pass
 
-except Exception as error:
-    print('Error: ' + error.args)
-    logger.error('Error: ' + error.args)
-    pass
 
-except KeyboardInterrupt as error:
+def signal_handler(sig, frame):
     print("Stopping...")
-    logger.info("Stopping...")
+    cLogger.info("Stopping...")
+    sys.exit(0)
+
+
+# Setze den Signal-Handler für SIGINT
+signal.signal(signal.SIGINT, signal_handler)
+
+# Deaktiviere die Terminal-Ausgabe für Zeichen wie ^C
+os.system('stty -echoctl')
+
+if __name__ == "__main__":
+    main()

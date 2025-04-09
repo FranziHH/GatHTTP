@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-from classes.scMySQL import *
+from classes.mcDonalds import *
 
-myDB = scMySQL(None)
-
-print(myDB.getDatabase())
+cMcDonalds = mcDonalds(None)
+print(cMcDonalds.getDatabase())

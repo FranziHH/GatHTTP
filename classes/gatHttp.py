@@ -2,39 +2,43 @@ import configparser
 import requests
 
 
-class Request:
+class gatHttp:
     def __init__(self, logger):
         self.active = False
+        self.init = False
         self.errMsg = ""
         self.logger = logger
-        self.getConfigRequestParams()
+        self.getConfig()
 
     def str2bool(self, v):
         return v.lower() in ("yes", "true", "t", "1")
 
-    def getConfigRequestParams(self):
+    def getConfig(self):
         config = configparser.ConfigParser()
         config.read('datas/config.ini')
         self.url = None
         self.user = None
         self.password = None
         self.timeout = None
+        self.GatName = None
         self.lf_replace = None
         
         try:
-            self.url = config['Request']['url']
-            self.user = config['Request']['username']
-            self.password = config['Request']['password']
-            self.timeout = int(config['Request']['timeout'])
-            self.lf_replace = config['Request']['lf_replace'] or ' '
+            self.active = self.str2bool(config['Modules']['GatHttp'])
+            self.url = config['GatHttp']['url']
+            self.user = config['GatHttp']['username']
+            self.password = config['GatHttp']['password']
+            self.timeout = int(config['GatHttp']['timeout'])
+            self.GatName = config['GatHttp']['GatName']
+            self.lf_replace = config['GatHttp']['lf_replace'] or ' '
             self.lf_replace = self.lf_replace.replace("\\n", "\n")
-            self.active = True
+            self.init = True
         except Exception as error:
-            # raise RuntimeError('config Request parameter missing') from error
-            print('config Request parameter missing')
+            # raise RuntimeError('config GatHttp parameter missing') from error
+            print('config GatHttp parameter missing')
             if self.logger is not None:
-                self.logger.info('config scReader parameter missing')
-            self.errMsg = 'config scReader parameter missing'
+                self.logger.info('config mcdSettings parameter missing')
+            self.errMsg = 'config mcdSettings parameter missing'
             pass
 
         # ----- Config Read URL Parameters -----
@@ -45,7 +49,7 @@ class Request:
 
         for i in range(1, 10):
             try:
-                param = config['Request']['req_param_' + str(i)]
+                param = config['GatHttp']['req_param_' + str(i)]
             except:
                 pass
             finally:
@@ -59,12 +63,12 @@ class Request:
                 param = ''
 
         try:
-            self.url_barcode = config['Request']['req_barcode']
+            self.url_barcode = config['GatHttp']['req_barcode']
         except:
             pass
 
         try:
-            self.url_rfid = config['Request']['req_rfid']
+            self.url_rfid = config['GatHttp']['req_rfid']
         except:
             pass
 
