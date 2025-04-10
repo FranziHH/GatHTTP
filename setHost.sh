@@ -17,7 +17,7 @@ else
     sudo sed -i "/127.0.1.1/s/$CURRENT_HOSTNAME/$NEW_HOSTNAME/" /etc/hosts
     sudo hostnamectl set-hostname $NEW_HOSTNAME
     sudo systemctl restart avahi-daemon
-    /home/dev/GatHTTP/getHost.sh
+    /home/dev/remoteAccess/getHost.sh
     echo
     echo "Please Reboot (sudo reboot)"
 fi

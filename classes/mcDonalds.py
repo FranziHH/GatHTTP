@@ -6,6 +6,7 @@ class mcDonalds:
     def __init__(self, logger):
         self.active = False
         self.init = False
+        self.canUse = False
         self.errMsg = ""
         self.logger = logger
 
@@ -34,6 +35,8 @@ class mcDonalds:
             self.timeLimit = int(config['mcDonalds']['timeLimit'])
             self.timeCleanUp = int(config['mcDonalds']['timeCleanUp'])
             self.init = True
+            if self.init and self.init:
+                self.canUse = True
         except Exception as error:
             print('config mcDonalds parameter missing')
             if self.logger is not None:
@@ -49,7 +52,19 @@ class mcDonalds:
         self.cursor.execute("select database()")
         return self.cursor.fetchone()[0]
     
-    def processBarcode(self, datas):
+    def processBarcode(self, arrBC):
+        if self.canUse == False or arrBC['recognized'] or arrBC['BC'] == '':
+            return arrBC
+
+        if not self.isValid(arrBC['BC']):
+            return arrBC
+
+        arrBC['procModule'] = self.__class__.__name__
+        arrBC['recognized'] = True
+        arrBC['access'] = False
+
+        datas = self.decode_barcode(arrBC['BC'])
+
         entry = None
         info = None
 
@@ -77,15 +92,18 @@ class mcDonalds:
         insertID = self.insertData(datas)
 
         retData = {'entry': entry, 'info': info, 'insertID': insertID}
-        print("----- processBarcode -----")
+        print("----- " + self.__class__.__name__ + ": processBarcode -----")
         print(retData)
-        print("----- processBarcode -----")
+        print("-----")
         if self.logger is not None:
-            self.logger.info("----- processBarcode -----")
+            self.logger.info("----- " + self.__class__.__name__ + ": processBarcode -----")
             self.logger.info(retData)
             self.logger.info("-----")
 
-        return retData
+        arrBC['access'] = bool(entry)
+        arrBC['message'] = info
+
+        return arrBC
 
     def insertData(self, datas):
         sql = "INSERT INTO mcd_entry (created_ts, store_id, pos_id, barcode, entry, info) VALUES (%s, %s, %s, %s, %s, %s)"

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 DIR=$(pwd)
-cd /home/dev/GatHTTP/
+cd /home/dev/remoteAccess/
 
-/home/dev/GatHTTP/mcdCleanUp.py
+/home/dev/remoteAccess/mcdCleanUp.py
 
 cd $DIR

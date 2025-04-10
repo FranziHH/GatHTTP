@@ -6,13 +6,13 @@ frequently used commands are defined as aliases:
 - ```ShutDown``` - shut down system
 - ```ReBoot``` - reboot system
 
-### Autostart - gathttp.service
-- ```enable-gathttp``` - enable Service
-- ```disable-gathttp``` - disable Service
-- ```start-gathttp``` - start Service
-- ```stop-gathttp``` - stop Service
-- ```status-gathttp``` - show status
-- ```edit-gathttp``` - edit status
+### Autostart - remoteAccess.service
+- ```enable-remoteAccess``` - enable Service
+- ```disable-remoteAccess``` - disable Service
+- ```start-remoteAccess``` - start Service
+- ```stop-remoteAccess``` - stop Service
+- ```status-remoteAccess``` - show status
+- ```edit-remoteAccess``` - edit status
 
 ### Set needed Datas and Infos
 - ```getHost``` - returns the existing data
@@ -42,13 +42,13 @@ python Serial must install from apt:
 sudo pip install --break-system-packages virtualenv
 
 ### Clone Repository
-git clone https://github.com/FranziHH/GatHTTP
+git clone https://github.com/FranziHH/remoteAccess
 
 ## After clone or pull from Github 
-GoTo GatHTTP Directory
+GoTo remoteAccess Directory
 
 ### Execute:
 virtualenv .env && source .env/bin/activate && pip install -r requirements.txt
 
-# GatHTTP
+# remoteAccess
 - Request from the server whether access is granted

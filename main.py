@@ -4,8 +4,9 @@ import signal
 import sys
 from classes.logger import *
 from classes.rs232 import *
-from classes.gatHttp import *
+from classes.remoteAccess import *
 from classes.mcDonalds import *
+from classes.maintenance import *
 
 # ----- Init Logger ----- #
 cLogger = logger(os.path.basename(__file__)).logger
@@ -23,35 +24,25 @@ if not cRs232.init:
     exit()
 # ----- Init rs232 ----- #
 
-# ----- Init gatHttp ----- #
-isGatHTTP = True
-cGatHttp = gatHttp(cLogger)
-
-if not cGatHttp.active:
-    print("gatHttp isn't activated!")
-    cLogger.info("gatHttp isn't activated!")
-    isGatHTTP = False
-
-if not cGatHttp.init:
-    print("gatHttp Settings failed!")
-    cLogger.info("gatHttp Settings failed!")
-    isGatHTTP = False
-# ----- Init gatHttp ----- #
+# ----- Init remoteAccess ----- #
+cRemoteAccess = remoteAccess(cLogger)
+if not cRemoteAccess.canUse:
+    print("RemoteAccess cannot be used -> Show Error on Log!")
+    cLogger.info("RemoteAccess cannot be used -> Show Error on Log!")
+    isremoteAccess = False
+# ----- Init remoteAccess ----- #
 
 # ----- Init mcDonalds ----- #
-isMcDonalds = True
 cMcDonalds = mcDonalds(cLogger)
-
-if not cMcDonalds.active:
-    print("McDonalds isn't activated!")
-    cLogger.info("McDonalds isn't activated!")
-    isMcDonalds = False
-
-if not cMcDonalds.init:
-    print("McDonalds Settings failed!")
-    cLogger.info("McDonalds Settings failed!")
+if not cMcDonalds.canUse:
+    print("McDonalds cannot be used -> Show Error on Log!")
+    cLogger.info("McDonalds cannot be used -> Show Error on Log!")
     isMcDonalds = False
 # ----- Init mcDonalds ----- #
+
+# ----- Init Modules ----- #
+cMaintenance = maintenance()
+# ----- Init Modules ----- #
 
 # ----- Init Modules [n] ----- #
 # ....... and so on
@@ -65,8 +56,29 @@ def main():
     try:
         while (True):
             retBC = cRs232.ReadBarcode()
+            # retBC['BC'] - Barcode
+            # retBC['RFID'] - RFID
+            if retBC['BC'] != "":
+                print('BC: ' + retBC['BC'])
+                cLogger.info('BC: ' + retBC['BC'])
+            elif retBC['RFID'] != "":
+                print('RFID: ' + retBC['RFID'])
+                cLogger.info('RFID: ' + retBC['RFID'])
+            else:
+                print('retBC is empty')
+                cLogger.info('retBC is empty')
+                continue
+
+            # process all modules - main (remoteAccess) last!
+            retBC = cMcDonalds.processBarcode(retBC)
+            retBC = cRemoteAccess.processBarcode(retBC)
+            retBC = cMaintenance.processBarcode(retBC)
+
             print(retBC)
+
+            cRs232.GatOpen(retBC['access'])
             
+
     except Exception as error:
         print('Error: ' + error.args)
         cLogger.error('Error: ' + error.args)

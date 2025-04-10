@@ -197,8 +197,8 @@ class rs232:
         return
 
     def ReadBarcode(self):
-        # retBC[0] - Barcode
-        # retBC[1] - RFID
+        # retBC['BC'] - Barcode
+        # retBC['RFID'] - RFID
         buffer = ""
         barcode = ""
         rfid = ""
@@ -248,14 +248,21 @@ class rs232:
                     self.logger.error('Error: ' + error.args)
                 pass
 
-        return barcode, rfid
+        return {
+            'BC': barcode,
+            'RFID': rfid,
+            'recognized': False,
+            'access': False,
+            'procModule': '',
+            'message': ''
+        }
 
-    def GatOpen(self, out: str):
+    def GatOpen(self, access):
         # Set Output GPIOs
         DO0 = 23
         DO1 = 24
 
-        if out == "1":
+        if access:
             DO = DO1  # green Light -> Open Gate
         else:
             DO = DO0  # red Light -> AccessDenied
@@ -265,7 +272,7 @@ class rs232:
         GPIO.output(DO, 1)
 
         if self.UseBeep:
-            if out == "1":
+            if access:
                 self.BeepEntry(self.WarnLoop0)
             else:
                 # self.BeepWarning(self.WarnLoop)

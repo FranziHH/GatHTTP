@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from classes.mcDonalds import *
-from classes.gatHttp import *
+from classes.remoteAccess import *
 from classes.rs232 import *
 import os
 import signal
@@ -14,7 +14,7 @@ cLogger.info('Start')
 cLogger.info("-----")
 
 
-cGatHttp = gatHttp(cLogger)
+cRemoteAccess = remoteAccess(cLogger)
 cRS232 = rs232(cLogger)
 cMcDonalds = mcDonalds(cLogger)
 
@@ -22,10 +22,10 @@ cLogger.info('classes created')
 cLogger.info("-----")
 cRS232.BeepOhNo(1)
 
-if not cGatHttp.init:
-    print('GatHttp is not init!')
+if not cRemoteAccess.init:
+    print('remoteAccess is not init!')
     print("-----")
-    cLogger.info('GatHttp is not init!')
+    cLogger.info('remoteAccess is not init!')
     cLogger.info("-----")
 
 
@@ -36,8 +36,8 @@ def doMcDonalds(barcode):
     return
 
 
-def doGatHttp(retBC):
-    request = cGatHttp.JsonRequest(cGatHttp.GatName, retBC[0], retBC[1])
+def doremoteAccess(retBC):
+    request = cRemoteAccess.JsonRequest(cRemoteAccess.GatName, retBC['BC'], retBC['RFID'])
     # request[0] - Status (True/False)
     # request[1] - Return Message (Text)
     # request[2] - Access 0 - False, 1 - True (String)
@@ -55,29 +55,29 @@ def main():
     try:
         while (True):
             retBC = cRS232.ReadBarcode()
-            # retBC[0] - Barcode
-            # retBC[1] - RFID
-            if retBC[0] != "":
-                print('BC: ' + retBC[0])
-                cLogger.info('BC: ' + retBC[0])
+            # retBC['BC'] - Barcode
+            # retBC['RFID'] - RFID
+            if retBC['BC'] != "":
+                print('BC: ' + retBC['BC'])
+                cLogger.info('BC: ' + retBC['BC'])
 
                 if cMcDonalds.init:
-                    if cMcDonalds.isValid(retBC[0]):
+                    if cMcDonalds.isValid(retBC['BC']):
                         print('exec McDonalds')
                         cLogger.info('exec McDonalds')
-                        doMcDonalds(retBC[0])
+                        doMcDonalds(retBC['BC'])
                         print("-----")
                         cLogger.info("-----")
                         continue
 
             else:
-                print('RFID: ' + retBC[1])
-                cLogger.info('RFID: ' + retBC[1])
+                print('RFID: ' + retBC['RFID'])
+                cLogger.info('RFID: ' + retBC['RFID'])
 
-            if cGatHttp.init:
-                print('exec GatHttp')
-                cLogger.info('exec GatHttp')
-                doGatHttp(retBC)
+            if cRemoteAccess.init:
+                print('exec remoteAccess')
+                cLogger.info('exec remoteAccess')
+                doremoteAccess(retBC)
                 print("-----")
                 cLogger.info("-----")
                 continue
