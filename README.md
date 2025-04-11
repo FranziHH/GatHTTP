@@ -6,13 +6,13 @@ frequently used commands are defined as aliases:
 - ```ShutDown``` - shut down system
 - ```ReBoot``` - reboot system
 
-### Autostart - remoteAccess.service
-- ```enable-remoteAccess``` - enable Service
-- ```disable-remoteAccess``` - disable Service
-- ```start-remoteAccess``` - start Service
-- ```stop-remoteAccess``` - stop Service
-- ```status-remoteAccess``` - show status
-- ```edit-remoteAccess``` - edit status
+### Autostart - pa.service
+- ```enable-pa``` - enable Service
+- ```disable-pa``` - disable Service
+- ```start-pa``` - start Service
+- ```stop-pa``` - stop Service
+- ```status-pa``` - show status
+- ```edit-pa``` - edit status
 
 ### Set needed Datas and Infos
 - ```getHost``` - returns the existing data
@@ -24,9 +24,9 @@ frequently used commands are defined as aliases:
 
 ### Development
 - ```git-update```
-    changes to the directory ~/GatHTTP, retrieves the latest updates of the code and installs required dependencies
+    changes to the directory ~/src, retrieves the latest updates of the code and installs required dependencies
 - ```activate```
-    changes to the directory ~/GatHTTP and activates the virtual Python environment
+    changes to the directory ~/src and activates the virtual Python environment
 - ```deactivate```
     deactivates the virtual Python environment
 - ```freeze```
@@ -42,10 +42,10 @@ python Serial must install from apt:
 sudo pip install --break-system-packages virtualenv
 
 ### Clone Repository
-git clone https://github.com/FranziHH/remoteAccess
+git clone https://github.com/FranziHH/GatHTTP
 
 ## After clone or pull from Github 
-GoTo remoteAccess Directory
+GoTo src Directory
 
 ### Execute:
 virtualenv .env && source .env/bin/activate && pip install -r requirements.txt
