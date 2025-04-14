@@ -3,6 +3,9 @@ from classes.offlineBcTypeB import *
 
 cOfflineBcTypeB = offlineBcTypeB(None)
 
+print(cOfflineBcTypeB.sslVersion())
+exit()
+
 data = '<POE24000#U2FsdGVkX192o+97fs4Ab6YQOJFuh+aFzsix9qFWH6qUnS4CsNtUMRK9QprvXbCDF4UwPoRT+5sOahJ4eDU4XTlz1ZEDLUzvazFIMKiYEiqotpJyAtm2++TZ0sJUa7t1xSWkZ31dPuECi1VQQGQ8+Jz/kh6xVL5CkAShR5mTecw=#POE>'
 key = 'PortalumSuperGeheimesPasswort12345'
 
