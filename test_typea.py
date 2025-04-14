@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-from classes.offlineBcTypA import *
+from classes.offlineBcTypeA import *
 
-cOfflineBcTypA = offlineBcTypA(None)
+cofflineBcTypeA = offlineBcTypeA(None)
 
 # gültig bis 11.06.2025
 '''
@@ -17,6 +17,6 @@ cOfflineBcTypA = offlineBcTypA(None)
 114600612010000921 
 '''
 
-barcode = '114600612010000820'
+barcode = '114600612010000517'
 
-print(cOfflineBcTypA.decode_barcode(barcode))
+print(cofflineBcTypeA.decode_barcode(barcode))
