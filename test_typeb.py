@@ -1,19 +1,15 @@
 #!/usr/bin/env python
-import base64
-import urllib2
-from Crypto.Cipher import AES
+from classes.offlineBcTypeB import *
+
+cOfflineBcTypeB = offlineBcTypeB(None)
+
+data = '<POE24000#U2FsdGVkX192o+97fs4Ab6YQOJFuh+aFzsix9qFWH6qUnS4CsNtUMRK9QprvXbCDF4UwPoRT+5sOahJ4eDU4XTlz1ZEDLUzvazFIMKiYEiqotpJyAtm2++TZ0sJUa7t1xSWkZ31dPuECi1VQQGQ8+Jz/kh6xVL5CkAShR5mTecw=#POE>'
+key = 'PortalumSuperGeheimesPasswort12345'
+
+# print(cOfflineBcTypeB.decode_barcode(data, key))
+3#12#25.05.2020 14:30#26.05.2020 18:30#196.0005#141#2#DominikGregotsch#Pretix#1457152124454545145#2E
 
 
-def decrypt(quotedEncodedEncrypted):
-    key = 'SecretKey'
-
-    encodedEncrypted = urllib2.unquote(quotedEncodedEncrypted)
-
-    cipher = AES.new(key)
-    decrypted = cipher.decrypt(base64.b64decode(encodedEncrypted))[:16]
-
-    for i in range(1, len(base64.b64decode(encodedEncrypted))/16):
-        cipher = AES.new(key, AES.MODE_CBC, base64.b64decode(encodedEncrypted)[(i-1)*16:i*16])
-        decrypted += cipher.decrypt(base64.b64decode(encodedEncrypted)[i*16:])[:16]
-
-    return decrypted.strip()
+ret = cOfflineBcTypeB.xor_encrypt_decrypt('3#12#25.05.2020 14:30#26.05.2020 18:30#196.0005#141#2#DominikGregotsch#Pretix#1457152124454545145#2E', key)
+ret = cOfflineBcTypeB.xor_encrypt_decrypt(ret, key)
+print(ret)

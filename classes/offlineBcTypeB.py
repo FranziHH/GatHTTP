@@ -1,38 +1,137 @@
-import base64
-import hashlib
-from Crypto import Random
-from Crypto.Cipher import AES
-import pkcs7
+import subprocess
 
-class Encryption:
+class offlineBcTypeB:
 
-    def __init__(self):
-        pass
+    def __init__(self, logger):
+        self.logger = logger
 
-    def Encrypt(self, PlainText, SecurePassword):
-        pw_encode = SecurePassword.encode('utf-8')
-        text_encode = PlainText.encode('utf-8')
+    def decode_barcode(self, barcode, key):
+        retBC = ''
+        valid = None
+        cryptType = None
+        keyNumber = None
+        dataType = None
+        placeHolder = None
+        separator = None
+        data = None
+        retData = None
 
-        key = hashlib.sha256(pw_encode).digest()
-        iv = Random.new().read(AES.block_size)
+        try:
+            # Position des Präfixes "<POE" finden
+            prefix_start = barcode.find("<POE") + len("<POE")
+            
+            # Position des Suffixes "POE>" finden
+            suffix_start = barcode.find("POE>", prefix_start)
+            
+            # Extrahieren des Strings zwischen Präfix und Suffix
+            if prefix_start != -1 and suffix_start != -1:
+                retBC = barcode[prefix_start:suffix_start]
 
-        cipher = AES.new(key, AES.MODE_CBC, iv)
-        pad_text = pkcs7.encode(text_encode)
-        msg = iv + cipher.encrypt(pad_text)
+        except Exception as e:
+            pass
+        
+        # wenn retBC gefüllt ist, config und Daten extrahieren
+        try:
+            cryptType = int(retBC[0:1])
+            keyNumber = int(retBC[1:2])
+            dataType = int(retBC[2:4])
+            placeHolder = retBC[4:5]
+            separator = retBC[5:6]
+            data = retBC[6:]
+            #Trim Data to right
+            trim_start = data.rfind(separator)
+            if trim_start != -1:
+                data = data[:trim_start]
+            
+            # simple test to see if data is available at all 
+            if len(data) > 20:
+                valid = True
+        except Exception as e:
+            pass
+        
+        if valid:
+            # only continue if no error has occurred up to this point
+            print(cryptType, keyNumber, dataType, placeHolder, separator, data)
 
-        EncodeMsg = base64.b64encode(msg)
-        return EncodeMsg
+            match cryptType:
+                case 0:
+                    #uncrypted
+                    retData = data
+                case 1:
+                    #xor
+                    retData = self.xor_encrypt_decrypt(data, key)
+                case 2:
+                    #AES256
+                    retData = self.decode_AES256(data, key)
 
-    def Decrypt(self, Encrypted, SecurePassword):
-        decodbase64 = base64.b64decode(Encrypted.decode("utf-8"))
-        pw_encode = SecurePassword.decode('utf-8')
+        return retData
+    
+    def calculate_xor_checksum_from_string(self, data):
+        # Berechnet die XOR-Checksumme für die gegebenen Zeichen eines Strings.
+        checksum = 0
+        for char in data:
+            checksum ^= ord(char)  # Konvertiert Zeichen in ihren ASCII-Wert und XOR
+        return checksum
 
-        iv = decodbase64[:AES.block_size]
-        key = hashlib.sha256(pw_encode).digest()
+    def xor_encrypt_decrypt(self, data, key):
+        # Verschlüsselt oder entschlüsselt einen String mit XOR und einem Schlüssel.
+        result = ""
+        key_length = len(key)
+        
+        for i, char in enumerate(data):
+            # XOR-Verknüpfung des Zeichens mit dem entsprechenden Schlüsselzeichen
+            result += chr(ord(char) ^ ord(key[i % key_length]))
+        
+        return result
 
-        cipher = AES.new(key, AES.MODE_CBC, iv)
-        msg = cipher.decrypt(decodbase64[AES.block_size:])
-        pad_text = pkcs7.decode(msg)
+    def decode_AES256(self, data, key):
+        valid = False
+        barcode = False
+        errMsg = None
 
-        decryptedString = pad_text.decode('utf-8')
-        return decryptedString
+        try:
+            command = f"echo '{data}' | openssl enc -d -base64 -aes-256-cbc -pbkdf2 -salt -k '{key}'"
+            process = subprocess.run(
+                command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+
+            if process.returncode != 0:
+                # Kompletten Fehlertext
+                full_error = process.stderr.decode()
+
+                # Nur "bad decrypt" extrahieren
+                if "bad decrypt" in full_error:
+                    errMsg = 'bad decrypt'
+                
+                errMsg = full_error.strip()
+
+            valid = True
+        
+        except Exception as e:
+            errMsg = 'Error decode_barcode: ' + str(e)
+            pass
+        
+        if valid:
+            try:
+                barcode = process.stdout.decode().rstrip("\r\n")
+
+            except Exception as e:
+                valid = False
+                errMsg = 'Error decode_barcode: ' + str(e)
+                pass
+    
+        else:
+            print('Error decode_barcode: ' + errMsg)
+            if self.logger is not None:
+                self.logger.info('Error decode_barcode: ' + errMsg)
+
+
+        return {
+            'valid': valid,
+            'barcode': barcode,
+            'errMsg': errMsg
+        }
+    
