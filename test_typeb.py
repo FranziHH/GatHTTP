@@ -12,16 +12,16 @@ exit()
 data = '<POE24000#U2FsdGVkX192o+97fs4Ab6YQOJFuh+aFzsix9qFWH6qUnS4CsNtUMRK9QprvXbCDF4UwPoRT+5sOahJ4eDU4XTlz1ZEDLUzvazFIMKiYEiqotpJyAtm2++TZ0sJUa7t1xSWkZ31dPuECi1VQQGQ8+Jz/kh6xVL5CkAShR5mTecw=#POE>'
 
 # Access Type 2
-data = '<POE21000#U2FsdGVkX1/wUnTYc2MVdK2mltz+xdx0EzLpOy9T0waulmXt3pRuganD4UxVMZqcEg7/ykeMtEhNmgtXXzit9ex90mq8Ojg7yuSgZR5Uu+5a544kdw0H8N1Rzmh8hgScHN2FCevz0oTsFezKcJ/nfg==#POE>'
+# data = '<POE21000#U2FsdGVkX1/wUnTYc2MVdK2mltz+xdx0EzLpOy9T0waulmXt3pRuganD4UxVMZqcEg7/ykeMtEhNmgtXXzit9ex90mq8Ojg7yuSgZR5Uu+5a544kdw0H8N1Rzmh8hgScHN2FCevz0oTsFezKcJ/nfg==#POE>'
 
 # Course
-data = '<POE23010#U2FsdGVkX1/jx7fKnzJ5ChP2xdgN3WdHpR1WkLj5bZsXsyACvxfTiCZI680RBi2z6YEI2eeLqARfIHhGgF6s2w==#POE>'
+# data = '<POE23010#U2FsdGVkX1/jx7fKnzJ5ChP2xdgN3WdHpR1WkLj5bZsXsyACvxfTiCZI680RBi2z6YEI2eeLqARfIHhGgF6s2w==#POE>'
 
 
 keyArr = ['supergeheim',
           '',
           'supergeheim',
-          'PortalumSuperGeheimesPasswort12345',
+          'PortalumSuperGeheimesPasswort1234',
           '',
           '',
           '',
@@ -30,6 +30,10 @@ keyArr = ['supergeheim',
         ]
 
 retData = cOfflineBcTypeB.decode_barcode(data, keyArr)
+'''
+print(retData)
+exit()
+'''
 if retData['valid']:
     bcArr = cOfflineBcTypeB.assignData(retData['data'], retData['dataType'])
     print(bcArr)

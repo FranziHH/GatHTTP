@@ -11,6 +11,7 @@ class offlineBcTypeB:
     def decode_barcode(self, barcode, keyArr):
         retBC = ''
         valid = None
+        validPrefix = False
         cryptType = None
         keyNumber = None
         dataType = None
@@ -31,8 +32,9 @@ class offlineBcTypeB:
             suffix_start = barcode.find("POE>", prefix_start)
 
             # Extrahieren des Strings zwischen Präfix und Suffix
-            if prefix_start != -1 and suffix_start != -1:
+            if prefix_start != (-1 + len("<POE")) and suffix_start != -1:
                 retBC = barcode[prefix_start:suffix_start]
+                validPrefix = True
             else:
                 if errMsg != '': errMsg += '\n'
                 errMsg += 'prefix / postfix not found'
@@ -41,81 +43,84 @@ class offlineBcTypeB:
             if errMsg != '': errMsg += '\n'
             errMsg += 'Error: prefix / postfix'
             pass
-
+        
         # wenn retBC gefüllt ist, config und Daten extrahieren
-        try:
-            cryptType = int(retBC[0:1])
-            keyNumber = int(retBC[1:2])
-            dataType = int(retBC[2:4])
-            placeHolder = retBC[4:5]
-            separator = retBC[5:6]
-            data = retBC[6:]
-            # Trim Data to right
-            trim_start = data.rfind(separator)
-            if trim_start != -1:
-                data = data[:trim_start]
+        if validPrefix:
+            try:
+                cryptType = int(retBC[0:1])
+                keyNumber = int(retBC[1:2])
+                dataType = int(retBC[2:4])
+                placeHolder = retBC[4:5]
+                separator = retBC[5:6]
+                data = retBC[6:]
+                # Trim Data to right
+                trim_start = data.rfind(separator)
+                if trim_start != -1:
+                    data = data[:trim_start]
 
-            # simple test to see if data is available at all
-            if len(data) > 20:
-                valid = True
-            else:
-                if errMsg != '': errMsg += '\n'
-                errMsg += 'wrong data len: ' + len(data)
+                # simple test to see if data is available at all
+                if len(data) > 20:
+                    valid = True
 
-            '''
-            # es wird nur der Datentyp = 0 (Zutritts Ticket) verarbeitet!
-            if dataType != 0:
-                if errMsg != '': errMsg += '\n'
-                errMsg += 'wrong dataType: ' + dataType
-                valid = False
-            '''
-
-        except Exception as e:
-            if errMsg != '': errMsg += '\n'
-            errMsg += 'Error Barcode: ' + str(e)
-            pass
-        
-        if len(keyArr) == 9:
-            key = keyArr[keyNumber - 1]
-            if key == '':
-                if errMsg != '': errMsg += '\n'
-                errMsg += 'keyArray[' + str(keyNumber - 1) + '] is empty!'
-                valid = False
-        else:
-            valid = False
-            if errMsg != '': errMsg += '\n'
-            errMsg += 'wrong keyArray'
-        
-        if valid:
-            # only continue if no error has occurred up to this point
-            # print(cryptType, keyNumber, dataType, placeHolder, separator, data)
-
-            match cryptType:
-                case 0:
-                    # uncrypted
-                    retData = data
-                case 1:
-                    # xor
-                    retData = self.xor_encrypt_decrypt(data, key)
-                case 2:
-                    # AES256
-                    retTmp = self.decode_AES256(data, key)
-                    valid = retTmp['valid']
-                    retData = retTmp['barcode']
-                    if retTmp['errMsg'] != '':
+                    if len(keyArr) == 9:
+                        key = keyArr[keyNumber - 1]
+                        if key == '':
+                            if errMsg != '': errMsg += '\n'
+                            errMsg += 'keyArray[' + str(keyNumber - 1) + '] is empty!'
+                            valid = False
+                    else:
+                        valid = False
                         if errMsg != '': errMsg += '\n'
-                        errMsg += retTmp['errMsg']
-            
-            if dataType == 0 or dataType == 1:
-                # Prüfsumme ist nur beim Typ 0 oder 1 vorhanden!
-                calcChecksum = self.calculate_xor_checksum_from_string(retData[:-2])
-                checkSum = retData[-2:]
-                if checkSum != calcChecksum:
-                    valid = False
+                        errMsg += 'wrong keyArray'
+                        
+                else:
                     if errMsg != '': errMsg += '\n'
-                    errMsg += 'checksum does not match'
+                    errMsg += 'wrong data len: ' + len(data)
 
-            retArr = str(retData).split(separator)
+                '''
+                # es wird nur der Datentyp = 0 (Zutritts Ticket) verarbeitet!
+                if dataType != 0:
+                    if errMsg != '': errMsg += '\n'
+                    errMsg += 'wrong dataType: ' + dataType
+                    valid = False
+                '''
+
+            except Exception as e:
+                if errMsg != '': errMsg += '\n'
+                errMsg += 'Error Barcode: ' + str(e)
+                pass
+            
+            if valid:
+                # only continue if no error has occurred up to this point
+                # print(cryptType, keyNumber, dataType, placeHolder, separator, data)
+
+                match cryptType:
+                    case 0:
+                        # uncrypted
+                        retData = data
+                    case 1:
+                        # xor
+                        retData = self.xor_encrypt_decrypt(data, key)
+                    case 2:
+                        # AES256
+                        retTmp = self.decode_AES256(data, key)
+                        valid = retTmp['valid']
+                        retData = retTmp['barcode']
+                        if retTmp['errMsg'] != '':
+                            if errMsg != '': errMsg += '\n'
+                            errMsg += retTmp['errMsg']
+                
+                if valid:
+                    if dataType == 0 or dataType == 1:
+                        # Prüfsumme ist nur beim Typ 0 oder 1 vorhanden!
+                        calcChecksum = self.calculate_xor_checksum_from_string(retData[:-2])
+                        checkSum = retData[-2:]
+                        if checkSum != calcChecksum:
+                            valid = False
+                            if errMsg != '': errMsg += '\n'
+                            errMsg += 'checksum does not match'
+
+                retArr = str(retData).split(separator)
             
         return {
             'valid': valid,
@@ -282,14 +287,14 @@ class offlineBcTypeB:
 
                 # Nur "bad decrypt" extrahieren
                 if "bad decrypt" in full_error:
-                    errMsg = 'bad decrypt'
+                    errMsg = 'decode_AES256: bad decrypt'
 
                 errMsg = full_error.strip()
 
             valid = True
 
         except Exception as e:
-            errMsg = 'Error decode_barcode: ' + str(e)
+            errMsg = 'decode_AES256: ' + str(e)
             pass
 
         if valid:
@@ -298,13 +303,13 @@ class offlineBcTypeB:
 
             except Exception as e:
                 valid = False
-                errMsg = 'Error decode_barcode: ' + str(e)
+                errMsg = 'decode_AES256: ' + str(e)
                 pass
 
         if not valid:
-            print('Error decode_barcode: ' + errMsg)
+            # print(errMsg)
             if self.logger is not None:
-                self.logger.info('Error decode_barcode: ' + errMsg)
+                self.logger.info(errMsg)
 
         return {
             'valid': valid,
