@@ -20,7 +20,7 @@ class offlineBcTypeA:
         ownIdentity = None      # 2 digits
         currentNumber = None    # 5 digits
         checkSum = None         # 2 digits
-        calcCheckSum = None
+        calcChecksum = None
 
         try:
             if len(barcode) >= 16:
@@ -35,8 +35,8 @@ class offlineBcTypeA:
                         valid = True
                     elif len(barcode) == 18:
                         checkSum = int(barcode[16:18])
-                        calcCheckSum = self.createCheckSum(barcode)
-                        if checkSum == calcCheckSum:
+                        calcChecksum = self.createCheckSum(barcode)
+                        if checkSum == calcChecksum:
                             valid = True
 
         except Exception as error:
@@ -56,7 +56,7 @@ class offlineBcTypeA:
             'ownIdentity': ownIdentity,
             'currentNumber': currentNumber,
             'checkSum': checkSum,
-            'calcCheckSum': calcCheckSum
+            'calcChecksum': calcChecksum
         }
     
     def createCheckSum(self, barcode):

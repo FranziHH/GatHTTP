@@ -1,12 +1,14 @@
 import subprocess
 
+# definition offline Barcode Type A
+# https://portalum.atlassian.net/wiki/spaces/C/pages/207814665/Typ+B+neue+Portalum+QR+Codes
 
 class offlineBcTypeB:
 
     def __init__(self, logger):
         self.logger = logger
 
-    def decode_barcode(self, barcode, key):
+    def decode_barcode(self, barcode, keyArr):
         retBC = ''
         valid = None
         cryptType = None
@@ -16,6 +18,10 @@ class offlineBcTypeB:
         separator = None
         data = None
         retData = None
+        retArr = None
+        checkSum = None
+        calcChecksum = None
+        errMsg = ''
 
         try:
             # Position des Präfixes "<POE" finden
@@ -27,8 +33,13 @@ class offlineBcTypeB:
             # Extrahieren des Strings zwischen Präfix und Suffix
             if prefix_start != -1 and suffix_start != -1:
                 retBC = barcode[prefix_start:suffix_start]
+            else:
+                if errMsg != '': errMsg += '\n'
+                errMsg += 'prefix / postfix not found'
 
         except Exception as e:
+            if errMsg != '': errMsg += '\n'
+            errMsg += 'Error: prefix / postfix'
             pass
 
         # wenn retBC gefüllt ist, config und Daten extrahieren
@@ -47,12 +58,31 @@ class offlineBcTypeB:
             # simple test to see if data is available at all
             if len(data) > 20:
                 valid = True
-        except Exception as e:
-            pass
+            else:
+                if errMsg != '': errMsg += '\n'
+                errMsg += 'wrong data len: ' + len(data)
 
+            # es wird nur der Datentyp = 0 (Zutritts Ticket) verarbeitet!
+            if dataType != 0:
+                if errMsg != '': errMsg += '\n'
+                errMsg += 'wrong dataType: ' + dataType
+                valid = False
+
+        except Exception as e:
+            if errMsg != '': errMsg += '\n'
+            errMsg += 'Error Barcode: ' + str(e)
+            pass
+        
+        if len(keyArr) == 9:
+            key = keyArr[keyNumber - 1]
+        else:
+            valid = False
+            if errMsg != '': errMsg += '\n'
+            errMsg += 'wrong keyArray'
+        
         if valid:
             # only continue if no error has occurred up to this point
-            print(cryptType, keyNumber, dataType, placeHolder, separator, data)
+            # print(cryptType, keyNumber, dataType, placeHolder, separator, data)
 
             match cryptType:
                 case 0:
@@ -63,33 +93,99 @@ class offlineBcTypeB:
                     retData = self.xor_encrypt_decrypt(data, key)
                 case 2:
                     # AES256
-                    retData = self.decode_AES256(data, key)
+                    retTmp = self.decode_AES256(data, key)
+                    valid = retTmp['valid']
+                    retData = retTmp['barcode']
+                    if retTmp['errMsg'] != '':
+                        if errMsg != '': errMsg += '\n'
+                        errMsg += retTmp['errMsg']
+            
+            calcChecksum = self.calculate_xor_checksum_from_string(retData[:-2])
+            checkSum = retData[-2:]
+            if checkSum != calcChecksum:
+                valid = False
+                if errMsg != '': errMsg += '\n'
+                errMsg += 'checksum does not match'
 
+            retArr = str(retData).split(separator)
+            
+        return {
+            'valid': valid,
+            'cryptType': cryptType,
+            'keyNumber': keyNumber,
+            'dataType': dataType,
+            'placeHolder': placeHolder,
+            'separator': separator,
+            'data': retArr,
+            'checkSum': checkSum,
+            'calcChecksum': calcChecksum,
+            'errMsg': errMsg
+        }
+
+    def assignData(self, data, type):
+        # im Moment wird nur der Typ 0 verarbeitet!
+        retData = None
+
+        match type:
+            case 0:
+                if len(data) >= 10:
+                    retData = {
+                        'version': data[0],
+                        'type': data[1],
+                        'validFrom': data[2],
+                        'validTo': data[3],
+                        'reference': data[4],
+                        'area': data[5],
+                        'location': data[6],
+                        'owner': data[7],
+                        'origin': data[8],
+                        'ticketId': data[9],
+                    }
+            case _:
+                pass
+        
         return retData
+
 
     def calculate_xor_checksum_from_string(self, data):
         # Berechnet die XOR-Checksumme für die gegebenen Zeichen eines Strings.
         checksum = 0
-        for char in data:
-            # Konvertiert Zeichen in ihren ASCII-Wert und XOR
-            checksum ^= ord(char)
-        return checksum
+        retStr = '--'
+
+        try:
+            for char in data:
+                # Konvertiert Zeichen in ihren ASCII-Wert und XOR
+                checksum ^= ord(char)
+
+            retStr = f'{checksum:x}'.upper()
+
+        except Exception as e:
+            pass
+
+        return retStr
 
     def xor_encrypt_decrypt(self, data, key):
         # Verschlüsselt oder entschlüsselt einen String mit XOR und einem Schlüssel.
-        result = ""
+        valid = False
+        barcode = ''
+        errMsg = ''
+
         key_length = len(key)
 
         for i, char in enumerate(data):
             # XOR-Verknüpfung des Zeichens mit dem entsprechenden Schlüsselzeichen
-            result += chr(ord(char) ^ ord(key[i % key_length]))
+            barcode += chr(ord(char) ^ ord(key[i % key_length]))
 
-        return result
+        return {
+            'valid': valid,
+            'barcode': barcode,
+            'errMsg': errMsg
+        }
 
     def decode_AES256(self, data, key):
         valid = False
-        barcode = False
-        errMsg = None
+        barcode = None
+        errMsg = ''
 
         try:
             command = f"echo '{data}' | openssl enc -d -base64 -aes-256-cbc -pbkdf2 -salt -k '{key}'"
@@ -125,7 +221,7 @@ class offlineBcTypeB:
                 errMsg = 'Error decode_barcode: ' + str(e)
                 pass
 
-        else:
+        if not valid:
             print('Error decode_barcode: ' + errMsg)
             if self.logger is not None:
                 self.logger.info('Error decode_barcode: ' + errMsg)
