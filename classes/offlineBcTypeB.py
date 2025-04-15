@@ -62,11 +62,13 @@ class offlineBcTypeB:
                 if errMsg != '': errMsg += '\n'
                 errMsg += 'wrong data len: ' + len(data)
 
+            '''
             # es wird nur der Datentyp = 0 (Zutritts Ticket) verarbeitet!
             if dataType != 0:
                 if errMsg != '': errMsg += '\n'
                 errMsg += 'wrong dataType: ' + dataType
                 valid = False
+            '''
 
         except Exception as e:
             if errMsg != '': errMsg += '\n'
@@ -75,6 +77,10 @@ class offlineBcTypeB:
         
         if len(keyArr) == 9:
             key = keyArr[keyNumber - 1]
+            if key == '':
+                if errMsg != '': errMsg += '\n'
+                errMsg += 'keyArray[' + str(keyNumber - 1) + '] is empty!'
+                valid = False
         else:
             valid = False
             if errMsg != '': errMsg += '\n'
@@ -100,12 +106,14 @@ class offlineBcTypeB:
                         if errMsg != '': errMsg += '\n'
                         errMsg += retTmp['errMsg']
             
-            calcChecksum = self.calculate_xor_checksum_from_string(retData[:-2])
-            checkSum = retData[-2:]
-            if checkSum != calcChecksum:
-                valid = False
-                if errMsg != '': errMsg += '\n'
-                errMsg += 'checksum does not match'
+            if dataType == 0 or dataType == 1:
+                # Prüfsumme ist nur beim Typ 0 oder 1 vorhanden!
+                calcChecksum = self.calculate_xor_checksum_from_string(retData[:-2])
+                checkSum = retData[-2:]
+                if checkSum != calcChecksum:
+                    valid = False
+                    if errMsg != '': errMsg += '\n'
+                    errMsg += 'checksum does not match'
 
             retArr = str(retData).split(separator)
             
@@ -128,6 +136,7 @@ class offlineBcTypeB:
 
         match type:
             case 0:
+                # DataType 00 (Zutritts Ticket)
                 if len(data) >= 10:
                     retData = {
                         'version': data[0],
@@ -139,8 +148,79 @@ class offlineBcTypeB:
                         'location': data[6],
                         'owner': data[7],
                         'origin': data[8],
-                        'ticketId': data[9],
+                        'ticketId': data[9]
                     }
+                if len(data) > 10:
+                    retData['checkSum'] = data[10]
+
+            case 1:
+                # DataType 01 (Online Kurse) 
+                if len(data) >= 7:
+                    # es wird noch nach Version 1 und 2 unterschieden ...
+                    if int(data[0]) == 1:
+                        retData = {
+                            'version': data[0],
+                            'courseId': data[1],
+                            'participantId': data[2],
+                            'participantName': data[3],
+                            'area': data[4],
+                            'location': data[5],
+                            'origin': data[6]
+                        }
+                        if len(data) > 7:
+                            retData['checkSum'] = data[7]
+
+                    if int(data[0]) == 2:
+                        if len(data) >= 9:
+                            retData = {
+                                'version': data[0],
+                                'courseId': data[1],
+                                'participantId': data[2],
+                                'participantName': data[3],
+                                'area': data[4],
+                                'location': data[5],
+                                'origin': data[6],
+                                'article': data[7],
+                                'price': data[8]
+                            }
+                            if len(data) > 10:
+                                retData['checkSum'] = data[10]
+                    
+            case 2:
+                # DataType 02 (klassische Wertkarte)
+                if len(data) >= 5:
+                    retData = {
+                        'version': data[0],
+                        'valueCardId': data[1],
+                        'area': data[2],
+                        'location': data[3],
+                        'origin': data[4]
+                    }
+
+            case 3:
+                # DataType 03 (Online Wertkarten)
+                if len(data) >= 8:
+                    retData = {
+                        'courseId': data[0],
+                        'participantId': data[1],
+                        'participantName': data[2],
+                        'area': data[3],
+                        'location': data[4],
+                        'source': data[5],
+                        'article': data[6],
+                        'price': data[7]
+                    }
+
+            case 4:
+                # DataType 04 klassische Kurse
+                # zur Zeit keine Definition vorhanden
+                pass
+
+            case 5:
+                # DataType 05 klassische Veranstaltungen
+                # zur Zeit keine Definition vorhanden
+                pass
+
             case _:
                 pass
         
@@ -157,7 +237,7 @@ class offlineBcTypeB:
                 # Konvertiert Zeichen in ihren ASCII-Wert und XOR
                 checksum ^= ord(char)
 
-            retStr = f'{checksum:x}'.upper()
+            retStr = f'{checksum:x}'.upper().zfill(2)
 
         except Exception as e:
             pass
