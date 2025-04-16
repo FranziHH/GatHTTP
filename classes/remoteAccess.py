@@ -1,6 +1,6 @@
 import configparser
 import requests
-
+import time
 
 class remoteAccess:
     def __init__(self, logger):
@@ -9,6 +9,12 @@ class remoteAccess:
         self.canUse = False
         self.errMsg = ""
         self.logger = logger
+        # ----- wenn der Eintritt nicht vollzogen wird ----- #
+        self.access = None
+        self.BC = None
+        self.RFID = None
+        self.lastRequest = None
+        # ----- wenn der Eintritt nicht vollzogen wird ----- #
         self.getConfig()
 
     def str2bool(self, v):
@@ -150,25 +156,92 @@ class remoteAccess:
                 'access': False
             }
 
+    def checkAccess(self, access):
+        # Rückmeldung der drehsperre
+        # access['procModule'] Check ob es vom eigenen Modul kommt
+        # access['accIn'] True/False
+        # access['accOut'] True/False
+
+        if self.access == None or access['procModule'] != self.__class__.__name__:
+            # anderes Modul aktiv, Daten löschen
+            self.BC = None
+            self.RFID = None
+            self.access = None
+            self.lastRequest = None
+            return
+
+        # im Moment wird nur der Zutritt ausgewertet!
+        if access['accIn'] and self.access:
+            # Zutritt erfolgreich, Daten löschen
+            self.BC = None
+            self.RFID = None
+            self.access = None
+            self.lastRequest = None
+
+        else:
+            # Wenn kein Zutritt erfolgte und ein Zutritt erlaubt war, dann Daten speichern und beim Auswerten des nächsten Scans nutzen
+            retData = {'entry': 0, 'info': 'no access was reported', 'BC': self.BC, 'RFID': self.RFID}
+
+            print("----- " + self.__class__.__name__ + ": checkAccess -----")
+            print(retData)
+            print("-----")
+            if self.logger is not None:
+                self.logger.info("----- " + self.__class__.__name__ + ": checkAccess -----")
+                self.logger.info(retData)
+                self.logger.info("-----")
+
+        return
+    
     def processBarcode(self, arrBC):
+        
         if self.canUse == False or arrBC['recognized']:
             return arrBC
 
-        request = self.JsonRequest(self.GatName, arrBC['BC'], arrBC['RFID'])
-        # request['status'] - True/False
-        # request['message'] - Return Message (Text)
-        # request['access'] - True/False
-        if (request['status']):
-            print(request['message'])
-            self.logger.info(request['message'].replace("\n", ", "))
-            arrBC['recognized'] = request['access']
-            arrBC['access'] = request['access']
-            arrBC['message'] = request['message']
+        # Im Falle eines Nicht Zutritts kann durch nochmaliges Scannen jetzt Zutritt erlangt werden ...
+        reAccess = False
+        if self.access:
+            if self.BC != '':
+                if self.BC == arrBC['BC']:
+                    reAccess = True
+            if self.RFID != '':
+                if self.RFID == arrBC['RFID']:
+                    reAccess = True
+
+            self.BC = None
+            self.RFID = None
+            self.access = None
+            self.lastRequest = None
+
+        if reAccess:
+            arrBC['recognized'] = True
+            arrBC['access'] = True
+            arrBC['message'] = 'do reAccess'
+            print(arrBC['message'])
+            if self.logger is not None:
+                self.logger.info(arrBC['message'])
         else:
-            print('Error: ' + request['message'].replace("\n", ", "))
-            self.logger.error(request['message'])
-            arrBC['access'] = False
-            arrBC['message'] = request['message']
+            request = self.JsonRequest(self.GatName, arrBC['BC'], arrBC['RFID'])
+            # request['status'] - True/False
+            # request['message'] - Return Message (Text)
+            # request['access'] - True/False
+            if (request['status']):
+                print(request['message'])
+                if self.logger is not None:
+                    self.logger.info(request['message'].replace("\n", ", "))
+                arrBC['recognized'] = request['access']
+                arrBC['access'] = request['access']
+                arrBC['message'] = request['message']
+            else:
+                print('Error: ' + request['message'].replace("\n", ", "))
+                if self.logger is not None:
+                    self.logger.error(request['message'])
+                arrBC['access'] = False
+                arrBC['message'] = request['message']
+            
+        self.BC = arrBC['BC']
+        self.RFID = arrBC['RFID']
+        self.access = arrBC['access']
+        self.lastRequest = time.time()
 
         arrBC['procModule'] = self.__class__.__name__
 

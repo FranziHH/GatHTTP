@@ -2,6 +2,7 @@ import configparser
 from datetime import datetime, timedelta
 from classes.mySQL import *
 
+
 class mcDonalds:
     def __init__(self, logger):
         self.active = False
@@ -56,7 +57,7 @@ class mcDonalds:
     def getDatabase(self):
         self.cursor.execute("select database()")
         return self.cursor.fetchone()[0]
-    
+
     def checkAccess(self, access):
         # Rückmeldung der drehsperre
         # access['procModule'] Check ob es vom eigenen Modul kommt
@@ -65,7 +66,7 @@ class mcDonalds:
 
         if self.access == None or self.insertID == None or access['procModule'] != self.__class__.__name__:
             return
-        
+
         # im Moment wird nur der Zutritt ausgewertet!
         if access['accIn'] == False and self.access:
             # Wenn kein Zutritt erfolgte und ein Zutritt erlaubt war, dann den letzten Eintrag anpassen
@@ -85,7 +86,7 @@ class mcDonalds:
         self.insertID == None
 
         return
-    
+
     def processBarcode(self, arrBC):
         if self.canUse == False or arrBC['recognized'] or arrBC['BC'] == '':
             return arrBC
@@ -107,7 +108,7 @@ class mcDonalds:
             info = "Access denied: wrong StoreID [barcodeStoreID: " + str(datas['storeID']) + ", localeStoreID: " + str(self.storeID) + "]"
         else:
             now = datetime.now()
-            timeDiff = divmod((now - datas['dateTime']).total_seconds(), 60)[0] 
+            timeDiff = divmod((now - datas['dateTime']).total_seconds(), 60)[0]
             if timeDiff > self.timeLimit:
                 entry = 0
                 info = "Access denied: time limit exceeded [barcodeTime: " + datas['strDateTime'] + ", accessTime: " + now.strftime('%Y-%m-%d %H:%M:%S') + ", Limit: " + str(self.timeLimit) + " minutes]"
@@ -115,7 +116,7 @@ class mcDonalds:
                 accessCount = self.countEntrys(datas['barcode'])
                 if accessCount >= self.maxEntrys:
                     entry = 0
-                    info = "Access denied: maximum number of accesses exceeded [usedEntrys: " + str(accessCount  ) + ", maxEntrys: " + str(self.maxEntrys) + "]"
+                    info = "Access denied: maximum number of accesses exceeded [usedEntrys: " + str(accessCount) + ", maxEntrys: " + str(self.maxEntrys) + "]"
                 else:
                     entry = 1
                     info = "Access guaranteed"
@@ -146,7 +147,7 @@ class mcDonalds:
         self.cursor.execute(sql, val)
         self.db.commit()
         return self.cursor.lastrowid
-    
+
     def updateEntry(self, datas):
         sql = "UPDATE mcd_entry SET entry = %s, info = %s WHERE id = %s"
         val = (datas['entry'], datas['info'], datas['id'])
@@ -159,7 +160,7 @@ class mcDonalds:
         val = (bc, )
         self.cursor.execute(sql, val)
         return self.cursor.fetchone()[0]
-    
+
     def cleanUP(self):
         tsCleanUP = datetime.now() - timedelta(days=self.timeCleanUp)
         stime = tsCleanUP.strftime('%Y-%m-%d %H:%M:%S')
@@ -186,7 +187,7 @@ class mcDonalds:
     def mapInit(self):
         self.base25_map = {
             0: "C", 1: "M", 2: "7", 3: "W", 4: "D", 5: "6", 6: "N", 7: "4", 8: "R", 9: "H",
-            'A': "F", 'B': "9", 'C': "Z", 'D': "L", 'E': "3", 'F': "X", 'G': "K", 'H': "Q", 
+            'A': "F", 'B': "9", 'C': "Z", 'D': "L", 'E': "3", 'F': "X", 'G': "K", 'H': "Q",
             'I': "G", 'J': "V", 'K': "P", 'L': "B", 'M': "T", 'N': "J", 'O': "Y"
         }
 
@@ -220,7 +221,7 @@ class mcDonalds:
         return barcode[i:] if i > 0 else barcode
 
     def isValid(self, barcode):
-        return (True, False)[self.extract_code(barcode) == ""]    
+        return (True, False)[self.extract_code(barcode) == ""]
 
     def decode_barcode(self, barcode):
         store_id = None
@@ -236,10 +237,10 @@ class mcDonalds:
 
         ret_barcode = self.extract_code(barcode)
         replaced_string = self.delete_additional_chars(ret_barcode).replace("-", "")
-        
+
         if replaced_string != "":
 
-            date_and_time = self.convert_special_base25_to_base10(replaced_string[2:9])
+            date_and_time = self.convert_special_base25_to_base10( replaced_string[2:9])
             year = int("20" + str(date_and_time)[:2])
             month_p = int(str(date_and_time)[2:4])
             day_p = int(str(date_and_time)[4:6])
@@ -253,12 +254,12 @@ class mcDonalds:
                 1 <= day_p <= 31 and
                 0 <= hour_p <= 23 and
                 0 <= min_p < 60 and
-                len(str(date_and_time)) == 10):
+                    len(str(date_and_time)) == 10):
                 store_id = self.convert_special_base25_to_base10(replaced_string[:2])
                 sales_type = self.convert_special_base25_to_base10(replaced_string[9:10])
                 pos_id = self.convert_special_base25_to_base10(replaced_string[10:12])
                 order_id = self.convert_special_base25_to_base10(replaced_string[13:15])
-                amount = self.convert_special_base25_to_base10(replaced_string[15:-1])
+                amount = self.convert_special_base25_to_base10( replaced_string[15:-1])
                 checker = replaced_string[-1]
             else:
                 store_id = self.convert_special_base25_to_base10(replaced_string[:1])

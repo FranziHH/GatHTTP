@@ -2,6 +2,7 @@ import mysql.connector
 import atexit
 import configparser
 
+
 class mySQL:
     def __init__(self, logger):
         self.init = False
@@ -17,10 +18,10 @@ class mySQL:
 
         if self.init:
             self.db = mysql.connector.connect(
-                host = self.host,
-                user = self.user,
-                passwd = self.passwd,
-                database = self.database
+                host=self.host,
+                user=self.user,
+                passwd=self.passwd,
+                database=self.database
             )
             self.cursor = self.db.cursor()
             self.commit = self.db.commit
@@ -28,7 +29,7 @@ class mySQL:
 
     def str2bool(self, v):
         return v.lower() in ("yes", "true", "t", "1")
-    
+
     def cleanup(self):
         self.db.commit()
         self.cursor.close()
@@ -49,8 +50,7 @@ class mySQL:
             pass
 
         return
-    
+
     def getDatabase(self):
         self.cursor.execute("select database()")
         return self.cursor.fetchone()[0]
-    

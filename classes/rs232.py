@@ -290,9 +290,11 @@ class rs232:
 
         if access:
             DO = DO1  # green Light -> Open Gate
+            timeOut = self.TimeOpen
         else:
             DO = DO0  # red Light -> AccessDenied
-
+            timeOut = 0.5
+        
         GPIO.setmode(GPIO.BCM)             # choose BCM or BOARD
         GPIO.setup(DO, GPIO.OUT)
         GPIO.output(DO, 1)
@@ -303,10 +305,9 @@ class rs232:
             else:
                 # self.BeepWarning(self.WarnLoop)
                 self.BeepOhNo(self.WarnLoop1)
-
-        # time.sleep(self.TimeOpen)
+        
         timeout_start = time.time()
-        while time.time() < timeout_start + self.TimeOpen:
+        while time.time() < timeout_start + timeOut:
             if self.getAccessInfo():
                 break
             time.sleep(0.1)         # wait 0.1 seconds

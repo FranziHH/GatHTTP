@@ -78,10 +78,10 @@ def main():
             retGatOpen = cRs232.GatOpen(retBC['access'])
             retGatOpen['procModule'] = retBC['procModule']
             print(retGatOpen)
-            
+
             # check, if access successfull
-            retBC = cMcDonalds.checkAccess(retGatOpen)
-            # retBC = cRemoteAccess.checkAccess(retGatOpen)
+            cMcDonalds.checkAccess(retGatOpen)
+            cRemoteAccess.checkAccess(retGatOpen)
 
     except Exception as error:
         print('Error: ' + error.args)
