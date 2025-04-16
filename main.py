@@ -73,11 +73,15 @@ def main():
             retBC = cMcDonalds.processBarcode(retBC)
             retBC = cRemoteAccess.processBarcode(retBC)
             retBC = cMaintenance.processBarcode(retBC)
+            # print(retBC)
 
-            print(retBC)
-
-            cRs232.GatOpen(retBC['access'])
+            retGatOpen = cRs232.GatOpen(retBC['access'])
+            retGatOpen['procModule'] = retBC['procModule']
+            print(retGatOpen)
             
+            # check, if access successfull
+            retBC = cMcDonalds.checkAccess(retGatOpen)
+            # retBC = cRemoteAccess.checkAccess(retGatOpen)
 
     except Exception as error:
         print('Error: ' + error.args)

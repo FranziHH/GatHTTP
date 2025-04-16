@@ -9,6 +9,10 @@ class mcDonalds:
         self.canUse = False
         self.errMsg = ""
         self.logger = logger
+        self.insertID = None
+        self.access = None
+        self.cursor = None
+        self.commit = None
 
         self.db = mySQL(logger)
         if not self.db.init:
@@ -19,6 +23,7 @@ class mcDonalds:
             return
 
         self.cursor = self.db.cursor
+        self.commit = self.db.commit
         self.getConfig()
         self.mapInit()
 
@@ -51,6 +56,35 @@ class mcDonalds:
     def getDatabase(self):
         self.cursor.execute("select database()")
         return self.cursor.fetchone()[0]
+    
+    def checkAccess(self, access):
+        # Rückmeldung der drehsperre
+        # access['procModule'] Check ob es vom eigenen Modul kommt
+        # access['accIn'] True/False
+        # access['accOut'] True/False
+
+        if self.access == None or self.insertID == None or access['procModule'] != self.__class__.__name__:
+            return
+        
+        # im Moment wird nur der Zutritt ausgewertet!
+        if access['accIn'] == False and self.access:
+            # Wenn kein Zutritt erfolgte und ein Zutritt erlaubt war, dann den letzten Eintrag anpassen
+            retData = {'entry': 0, 'info': 'no access was reported', 'id': self.insertID}
+            self.updateEntry(retData)
+
+            print("----- " + self.__class__.__name__ + ": checkAccess -----")
+            print(retData)
+            print("-----")
+            if self.logger is not None:
+                self.logger.info("----- " + self.__class__.__name__ + ": checkAccess -----")
+                self.logger.info(retData)
+                self.logger.info("-----")
+
+        # nachdem Funktion abgearbeitet wurde, die Daten löschen
+        self.access == None
+        self.insertID == None
+
+        return
     
     def processBarcode(self, arrBC):
         if self.canUse == False or arrBC['recognized'] or arrBC['BC'] == '':
@@ -89,9 +123,9 @@ class mcDonalds:
         # insert Data into DB
         datas['entry'] = entry
         datas['info'] = info
-        insertID = self.insertData(datas)
+        self.insertID = self.insertData(datas)
 
-        retData = {'entry': entry, 'info': info, 'insertID': insertID}
+        retData = {'entry': entry, 'info': info, 'insertID': self.insertID}
         print("----- " + self.__class__.__name__ + ": processBarcode -----")
         print(retData)
         print("-----")
@@ -100,6 +134,7 @@ class mcDonalds:
             self.logger.info(retData)
             self.logger.info("-----")
 
+        self.access = bool(entry)
         arrBC['access'] = bool(entry)
         arrBC['message'] = info
 
@@ -109,14 +144,14 @@ class mcDonalds:
         sql = "INSERT INTO mcd_entry (created_ts, store_id, pos_id, barcode, entry, info) VALUES (%s, %s, %s, %s, %s, %s)"
         val = (datas['strDateTime'], datas['storeID'], datas['posID'], datas['barcode'], datas['entry'], datas['info'])
         self.cursor.execute(sql, val)
-        self.db.commit
+        self.db.commit()
         return self.cursor.lastrowid
     
-    def updateEntry(self, id, entry, info):
+    def updateEntry(self, datas):
         sql = "UPDATE mcd_entry SET entry = %s, info = %s WHERE id = %s"
-        val = (entry, info, id)
+        val = (datas['entry'], datas['info'], datas['id'])
         self.cursor.execute(sql, val)
-        self.db.commit
+        self.db.commit()
         return self.cursor.rowcount
 
     def countEntrys(self, bc):
@@ -131,7 +166,7 @@ class mcDonalds:
         sql = "DELETE FROM mcd_entry WHERE current_ts < %s"
         val = (stime, )
         self.cursor.execute(sql, val)
-        self.db.commit
+        self.db.commit()
         retVal = self.cursor.rowcount
 
         print("----- cleanUP -----")

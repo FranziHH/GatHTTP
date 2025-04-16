@@ -13,6 +13,8 @@ class rs232:
         self.config.read('datas/config.ini')
         self.serial = None
         self.errMsg = ""
+        self.accessIn = False
+        self.accessOut = False
 
         self.getConfigReader()
         self.getGatConfig()
@@ -30,6 +32,14 @@ class rs232:
         # flush does not do what you expect, workaround is read_all
         # self.serial.read_all()
 
+        # ------- Set GPIO ------- #
+        GPIO.setmode(GPIO.BCM)     # set up BCM GPIO numbering
+        self.DI0 = 17
+        self.DI1 = 27
+        GPIO.setup(self.DI0, GPIO.IN)    # set GPIO 17 as input
+        GPIO.setup(self.DI1, GPIO.IN)    # set GPIO 27 as input
+        # ------- Set GPIO ------- #
+
         atexit.register(self.cleanup)
 
     def cleanup(self):
@@ -37,6 +47,7 @@ class rs232:
             self.serial.reset_input_buffer()
             self.serial.reset_output_buffer()
             self.serial.close()
+        GPIO.cleanup()
 
     def str2bool(self, v):
         return v.lower() in ("yes", "true", "t", "1")
@@ -143,10 +154,13 @@ class rs232:
             while (i < 3):
                 i += 1
                 self.serial.write(self.SetBeep(2000, 200, 20))
+                self.getAccessInfo()
                 time.sleep(.2)
                 self.serial.write(self.SetBeep(1000, 200, 20))
+                self.getAccessInfo()
                 time.sleep(.2)
 
+        self.getAccessInfo()
         time.sleep(.2)
         return
 
@@ -157,10 +171,13 @@ class rs232:
             self.serial.write(self.SetLED("red", 1200))
 
             self.serial.write(self.SetBeep(2000, 200, 20))
+            self.getAccessInfo()
             time.sleep(.25)
             self.serial.write(self.SetBeep(1000, 500, 20))
+            self.getAccessInfo()
             time.sleep(.35)
 
+        self.getAccessInfo()
         time.sleep(.2)
         return
 
@@ -169,14 +186,17 @@ class rs232:
         while (j < repeat):
             j += 1
             self.serial.write(self.SetLED("red", 1200))
+            self.getAccessInfo()
             time.sleep(.1)
 
             freq = 2000
             while (freq > 300):
                 freq -= 100
                 self.serial.write(self.SetBeep(freq, 50, 20))
+                self.getAccessInfo()
                 time.sleep(.05)
 
+        self.getAccessInfo()
         time.sleep(.2)
         return
 
@@ -185,14 +205,17 @@ class rs232:
         while (j < repeat):
             j += 1
             self.serial.write(self.SetLED("green", 1200))
+            self.getAccessInfo()
             time.sleep(.1)
 
             freq = 500
             while (freq < 2300):
                 freq += 100
                 self.serial.write(self.SetBeep(freq, 50, 20))
+                self.getAccessInfo()
                 time.sleep(.05)
 
+        self.getAccessInfo()
         time.sleep(.2)
         return
 
@@ -258,6 +281,9 @@ class rs232:
         }
 
     def GatOpen(self, access):
+        self.accessIn = False
+        self.accessOut = False
+
         # Set Output GPIOs
         DO0 = 23
         DO1 = 24
@@ -278,7 +304,33 @@ class rs232:
                 # self.BeepWarning(self.WarnLoop)
                 self.BeepOhNo(self.WarnLoop1)
 
-        time.sleep(self.TimeOpen)
+        # time.sleep(self.TimeOpen)
+        timeout_start = time.time()
+        while time.time() < timeout_start + self.TimeOpen:
+            if self.getAccessInfo():
+                break
+            time.sleep(0.1)         # wait 0.1 seconds
+
         GPIO.output(DO, 0)
 
-        return
+        print('accIn: ' + str(self.accessIn) + ', accOut: ' + str(self.accessOut))
+        if self.logger is not None:
+            self.logger.error('accIn: ' + str(self.accessIn) + ', accOut: ' + str(self.accessOut))
+
+        return {
+            'accIn': self.accessIn,
+            'accOut': self.accessOut
+        }
+
+    def getAccessInfo(self):
+        # kommt aus anderen Funktionen (Beep)
+        if self.accessIn or self.accessOut:
+            return True
+        if GPIO.input(self.DI1):
+            self.accessIn = True
+            return True
+        if GPIO.input(self.DI0):
+            self.accessOut = True
+            return True
+        return False
+    

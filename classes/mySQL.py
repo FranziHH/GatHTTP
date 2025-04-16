@@ -23,7 +23,7 @@ class mySQL:
                 database = self.database
             )
             self.cursor = self.db.cursor()
-            self.commit = self.db.commit()
+            self.commit = self.db.commit
             atexit.register(self.cleanup)
 
     def str2bool(self, v):
