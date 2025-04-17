@@ -79,6 +79,14 @@ def main():
             retGatOpen['procModule'] = retBC['procModule']
             print(retGatOpen)
 
+            if not cRs232.EvalEntry:
+                #set Value to Access
+                retGatOpen['accIn'] = True
+
+            if not cRs232.EvalExit:
+                #set Value to Exit
+                retGatOpen['accOut'] = True
+
             # check, if access successfull
             cMcDonalds.checkAccess(retGatOpen)
             cRemoteAccess.checkAccess(retGatOpen)

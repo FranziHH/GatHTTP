@@ -15,7 +15,9 @@ class rs232:
         self.errMsg = ""
         self.accessIn = False
         self.accessOut = False
-
+        self.EvalEntry = False
+        self.EvalExit = False
+        
         self.getConfigReader()
         self.getGatConfig()
 
@@ -91,6 +93,13 @@ class rs232:
             if self.errMsg != "":
                 self.errMsg += '\n'
             self.errMsg += 'config GatOpen parameter missing'
+            pass
+        
+        try:
+            # default: False, if config not exists, is value False
+            self.EvalEntry = self.str2bool(self.config['GatOpen']['EvalEntry'])
+            self.EvalExit = self.str2bool(self.config['GatOpen']['EvalExit'])
+        except Exception as error:
             pass
 
         return
